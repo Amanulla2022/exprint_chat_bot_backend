@@ -4,7 +4,7 @@ import RecommendationRenderer from "./Recommedationrenderer";
 import ProductDetailsRenderer from "./ProductsDetailsRenderer";
 import ComparisonRenderer from "./ComparisonRenderer";
 import DiscoveryRenderer from "./DiscoveryRenderer";
-import OrderRenderer from "./OrderRenderer";
+import SalesRenderer from "./SalesRenderer";
 import LeadRenderer from "./LeadRenderer";
 import FAQRenderer from "./FAQRenderer";
 import SupportRenderer from "./SupportRenderer";
@@ -63,11 +63,15 @@ export default function ResponseRenderer({ message }) {
     case "discovery":
       return <DiscoveryRenderer data={data} actions={rendererActions} />;
 
-    case "order":
-    case "order_form":
-    case "order_completed":
+    case "sales":
+      if (data.workflow === "LEAD") {
+        return (
+          <LeadRenderer data={data} message={text} actions={rendererActions} />
+        );
+      }
+
       return (
-        <OrderRenderer data={data} message={text} actions={rendererActions} />
+        <SalesRenderer data={data} message={text} actions={rendererActions} />
       );
 
     case "out_of_scope":

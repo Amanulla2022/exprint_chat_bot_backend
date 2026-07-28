@@ -2,94 +2,154 @@ import mongoose from "mongoose";
 
 /*
  * =====================================================
- * Order Item
+ * Product
  * =====================================================
  */
 
-const OrderItemSchema = new mongoose.Schema(
+const ProductSchema = new mongoose.Schema(
   {
-    product: {
-      type: String,
-      required: true,
-      trim: true,
+    id: String,
+    name: String,
+    slug: String,
+  },
+  { _id: false },
+);
+
+/*
+ * =====================================================
+ * Product Selection
+ * =====================================================
+ */
+
+const SelectionSchema = new mongoose.Schema(
+  {
+    id: String,
+    name: String,
+  },
+  { _id: false },
+);
+
+/*
+ * =====================================================
+ * Product Requirement
+ * =====================================================
+ */
+
+const RequirementSchema = new mongoose.Schema(
+  {
+    id: String,
+
+    name: String,
+
+    required: {
+      type: Boolean,
+      default: true,
     },
 
-    mainCategory: {
-      type: String,
+    value: {
+      type: mongoose.Schema.Types.Mixed,
       default: null,
     },
 
-    subCategory: {
+    status: {
       type: String,
-      default: null,
+      enum: ["PENDING", "RECEIVED", "VERIFIED"],
+      default: "PENDING",
     },
+  },
+  { _id: false },
+);
 
+/*
+ * =====================================================
+ * Workflow
+ * =====================================================
+ */
+
+const WorkflowSchema = new mongoose.Schema(
+  {
     quantity: {
       type: Number,
       default: null,
-      min: 1,
     },
 
-    /*
-     * Artwork
-     */
+    artwork: {
+      status: {
+        type: String,
+        enum: ["CUSTOMER_ARTWORK", "NEED_DESIGN"],
+        default: null,
+      },
 
-    artworkStatus: {
-      type: String,
-      enum: ["READY", "PENDING", "NEED_DESIGN"],
-      default: null,
-    },
-
-    artworkFile: {
-      type: String,
-      default: null,
-    },
-
-    designRequirements: {
-      type: String,
-      default: null,
-    },
-
-    /*
-     * Delivery
-     */
-
-    deadline: {
-      type: String,
-      default: null,
-    },
-
-    /*
-     * Dynamic Specifications
-     */
-
-    specifications: {
-      type: mongoose.Schema.Types.Mixed,
-      default: {},
-    },
-
-    /*
-     * Additional Notes
-     */
-
-    notes: {
-      type: String,
-      default: null,
-    },
-
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-
-    updatedAt: {
-      type: Date,
-      default: Date.now,
+      reference: {
+        type: String,
+        default: null,
+      },
     },
   },
+  { _id: false },
+);
+
+/*
+ * =====================================================
+ * Pricing
+ * =====================================================
+ */
+
+const PricingSchema = new mongoose.Schema(
   {
-    _id: false,
+    currency: {
+      type: String,
+      default: "AED",
+    },
+
+    subtotal: {
+      type: Number,
+      default: 0,
+    },
+
+    delivery: {
+      type: Number,
+      default: 0,
+    },
+
+    tax: {
+      type: Number,
+      default: 0,
+    },
+
+    total: {
+      type: Number,
+      default: 0,
+    },
   },
+  { _id: false },
+);
+
+/*
+ * =====================================================
+ * Delivery
+ * =====================================================
+ */
+
+const DeliverySchema = new mongoose.Schema(
+  {
+    method: {
+      type: String,
+      enum: ["delivery", "pickup"],
+      default: null,
+    },
+
+    address: {
+      type: String,
+      default: null,
+    },
+
+    requiredDate: {
+      type: String,
+      default: null,
+    },
+  },
+  { _id: false },
 );
 
 /*
@@ -105,6 +165,11 @@ const CustomerSchema = new mongoose.Schema(
       default: null,
     },
 
+    company: {
+      type: String,
+      default: null,
+    },
+
     phone: {
       type: String,
       default: null,
@@ -114,10 +179,84 @@ const CustomerSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+  },
+  { _id: false },
+);
 
-    company: {
-      type: String,
+/*
+ * =====================================================
+ * Order Item
+ * =====================================================
+ */
+
+const OrderItemSchema = new mongoose.Schema(
+  {
+    product: {
+      type: ProductSchema,
+      required: true,
+    },
+
+    selection: {
+      type: SelectionSchema,
       default: null,
+    },
+
+    /*
+     * Dynamic product fields.
+     * Example:
+     *
+     * {
+     *    numberOfNames: 3,
+     *    width: 200,
+     *    height: 100,
+     *    lamination: "Matte"
+     * }
+     */
+    productData: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+
+    /*
+     * Product specific requirements.
+     *
+     * Example:
+     *
+     * Trade License
+     * Emirates ID
+     * Municipality Approval
+     */
+    requirements: {
+      type: [RequirementSchema],
+      default: [],
+    },
+
+    /*
+     * Common workflow fields.
+     */
+    workflow: {
+      type: WorkflowSchema,
+      default: () => ({}),
+    },
+
+    pricing: {
+      type: PricingSchema,
+      default: () => ({}),
+    },
+
+    addons: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+
+    notes: {
+      type: [String],
+      default: [],
+    },
+
+    completed: {
+      type: Boolean,
+      default: false,
     },
   },
   {
@@ -133,14 +272,9 @@ const CustomerSchema = new mongoose.Schema(
 
 const OrderSchema = new mongoose.Schema(
   {
-    /*
-     * Identity
-     */
-
     orderNumber: {
       type: String,
       default: null,
-      // unique: true,
       sparse: true,
     },
 
@@ -162,37 +296,36 @@ const OrderSchema = new mongoose.Schema(
       default: null,
     },
 
-    /*
-     * Conversation State
-     */
-
     status: {
       type: String,
-      enum: ["COLLECTING", "REVIEW", "CONFIRMED", "CANCELLED"],
+      enum: ["COLLECTING", "REVIEW", "CONFIRMED", "CANCELLED", "DELETED"],
       default: "COLLECTING",
     },
 
-    /*
-     * Customer
-     */
+    confirmed: {
+      type: Boolean,
+      default: false,
+    },
 
     customer: {
       type: CustomerSchema,
       default: () => ({}),
     },
 
-    /*
-     * Items
-     */
+    delivery: {
+      type: DeliverySchema,
+      default: () => ({}),
+    },
+
+    pricing: {
+      type: PricingSchema,
+      default: () => ({}),
+    },
 
     items: {
       type: [OrderItemSchema],
       default: [],
     },
-
-    /*
-     * Totals
-     */
 
     totalItems: {
       type: Number,
@@ -204,18 +337,24 @@ const OrderSchema = new mongoose.Schema(
       default: 0,
     },
 
-    /*
-     * Order Notes
-     */
-
     notes: {
-      type: String,
-      default: null,
+      type: [String],
+      default: [],
     },
   },
   {
     timestamps: true,
     collection: "orders",
+  },
+);
+
+OrderSchema.index(
+  {
+    sessionId: 1,
+    status: 1,
+  },
+  {
+    name: "session_status_index",
   },
 );
 

@@ -55,27 +55,28 @@ export default class ResponseBuilder {
 
   /*
    * =====================================================
-   * Order
+   * Sales
    * =====================================================
    */
 
-  order(data, metadata = {}) {
+  sales(data, metadata = {}) {
     return this.success({
-      type: "order",
+      type: "sales",
       data,
       actions: data?.actions ?? [],
       metadata,
     });
   }
+
   /*
    * =====================================================
-   * Order Completed
+   * Sales Completed
    * =====================================================
    */
 
-  orderCompleted(data = {}, metadata = {}) {
+  salesCompleted(data = {}, metadata = {}) {
     return this.success({
-      type: "order_completed",
+      type: "sales_completed",
       data,
       actions: data?.actions ?? [],
       metadata,

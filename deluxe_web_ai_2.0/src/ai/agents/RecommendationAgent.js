@@ -10,7 +10,7 @@ const responseBuilder = new ResponseBuilder();
 const recommendationService = new RecommendationService();
 const recommendationQuestionService = new RecommendationQuestionService();
 
-export default class SalesAgent extends BaseAgent {
+export default class RecommendationAgent extends BaseAgent {
   async execute(state) {
     /*
      * =====================================================

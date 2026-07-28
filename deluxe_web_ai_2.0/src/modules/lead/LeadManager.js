@@ -3,7 +3,7 @@ import LEAD_MESSAGES from "./IntentTypes/LeadMessages.js";
 import LEAD_TYPES from "./IntentTypes/LeadTypes.js";
 
 export default class LeadManager {
-  createLead() {
+  createLead(data = {}) {
     return {
       leadId: crypto.randomUUID(),
 
@@ -16,9 +16,10 @@ export default class LeadManager {
         phone: null,
         email: null,
         company: null,
+        ...(data.customer ?? {}),
       },
 
-      order: null,
+      order: data.order ?? null,
 
       notes: null,
 
@@ -31,6 +32,7 @@ export default class LeadManager {
       updatedAt: new Date(),
     };
   }
+
   getLeadIntroduction(type) {
     return (
       LEAD_MESSAGES[type]?.introduction ??
@@ -111,48 +113,62 @@ export default class LeadManager {
    * ---------------------------------------------------------
    */
 
-  getNextQuestion(lead) {
-    console.log("Lead Customer:", lead.customer);
+  getCustomerForm(lead) {
     const customer = lead.customer ?? {};
 
-    if (!customer.name) {
-      return {
-        step: "ASK_NAME",
-
-        field: "name",
-
-        message: `${this.getLeadIntroduction(
-          lead.type,
-        )}\n\nMay I know your name?`,
-      };
-    }
-
-    if (!customer.phone) {
-      return {
-        step: "ASK_PHONE",
-
-        field: "phone",
-
-        message: `Thank you ${customer.name}.\n\nMay I have your phone number?`,
-      };
-    }
-
-    if (!customer.email) {
-      return {
-        step: "ASK_EMAIL",
-
-        field: "email",
-
-        message: "Great! Finally, could you please share your email address?",
-      };
-    }
-
     return {
-      step: "LEAD_COMPLETED",
+      step: "COLLECT_CUSTOMER",
 
-      field: null,
+      type: "FORM",
 
-      message: null,
+      title: "Contact Information",
+
+      subtitle: "Complete your request",
+
+      message: this.getLeadIntroduction(lead.type),
+
+      description:
+        "Please provide your contact details so our product specialist can prepare your quotation and get in touch with you.",
+
+      fields: [
+        {
+          id: "name",
+          label: "Full Name",
+          placeholder: "John Smith",
+          type: "text",
+          required: true,
+          value: customer.name,
+        },
+        {
+          id: "phone",
+          label: "Phone Number",
+          placeholder: "+971 50 123 4567",
+          type: "tel",
+          required: true,
+          value: customer.phone,
+        },
+        {
+          id: "email",
+          label: "Email Address",
+          placeholder: "john@example.com",
+          type: "email",
+          required: false,
+          value: customer.email,
+        },
+        {
+          id: "company",
+          label: "Company",
+          placeholder: "Optional",
+          type: "text",
+          required: false,
+          value: customer.company,
+        },
+      ],
+
+      submitAction: {
+        id: "SUBMIT_LEAD",
+        label: "Submit Request",
+      },
     };
   }
   /*

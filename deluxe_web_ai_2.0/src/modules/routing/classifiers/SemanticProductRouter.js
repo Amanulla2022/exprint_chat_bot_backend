@@ -2,10 +2,10 @@ import ProductResolver from "../../catalog/ProductResolver.js";
 import LLMService from "../../../ai/llm/LLMService.js";
 
 import {
-  ORDER_PATTERNS,
-  COMPARISON_PATTERNS,
+  SALES_PATTERNS,
+  // COMPARISON_PATTERNS,
   DETAIL_PATTERNS,
-  DISCOVERY_PATTERNS,
+  // DISCOVERY_PATTERNS,
 } from "../utils/RoutingConstants.js";
 
 const resolver = new ProductResolver();
@@ -29,16 +29,12 @@ export default class SemanticProductRouter {
     /*
      * =====================================================
      * Recommendation Workflow
-     *
-     * While RecommendationQuestionEngine is collecting
-     * answers, do NOT perform semantic product routing.
-     * Let the workflow continue.
      * =====================================================
      */
 
-    if (state.workflow === "RECOMMENDATION" && state.awaitingDecision) {
-      return null;
-    }
+    // if (state.workflow === "RECOMMENDATION" && state.awaitingDecision) {
+    //   return null;
+    // }
 
     /*
      * =====================================================
@@ -46,9 +42,9 @@ export default class SemanticProductRouter {
      * =====================================================
      */
 
-    if (catalogContext.intent === "recommendation") {
-      return null;
-    }
+    // if (catalogContext.intent === "recommendation") {
+    //   return null;
+    // }
 
     /*
      * =====================================================
@@ -66,9 +62,6 @@ export default class SemanticProductRouter {
     /*
      * =====================================================
      * Multiple Products
-     *
-     * Multiple retrieved products DO NOT automatically
-     * mean the user wants a comparison.
      * =====================================================
      */
 
@@ -83,34 +76,18 @@ export default class SemanticProductRouter {
       };
     }
 
-    const product = catalogContext.products[0].toLowerCase();
-
     /*
      * =====================================================
-     * Order
+     * Sales
      * =====================================================
      */
 
     if (
-      ORDER_PATTERNS.some((pattern) => pattern.test(normalized)) ||
+      SALES_PATTERNS.some((pattern) => pattern.test(normalized)) ||
       /\b\d+\b/.test(normalized)
     ) {
       return {
-        capability: "order",
-        confidence: 1,
-        source: "RULE",
-      };
-    }
-
-    /*
-     * =====================================================
-     * Comparison
-     * =====================================================
-     */
-
-    if (COMPARISON_PATTERNS.some((pattern) => pattern.test(normalized))) {
-      return {
-        capability: "comparison",
+        capability: "sales",
         confidence: 1,
         source: "RULE",
       };
@@ -136,6 +113,8 @@ export default class SemanticProductRouter {
      * =====================================================
      */
 
+    const product = catalogContext.products[0].toLowerCase();
+
     if (
       normalized === product ||
       DISCOVERY_PATTERNS.some((pattern) => pattern.test(normalized))
@@ -158,7 +137,7 @@ export default class SemanticProductRouter {
       properties: {
         capability: {
           type: "string",
-          enum: ["discovery", "product_details", "comparison", "order"],
+          enum: ["sales", "product_details"],
         },
         confidence: {
           type: "number",
@@ -180,13 +159,15 @@ Return ONLY valid JSON.
 
 Choose ONE capability.
 
-discovery
-- browse product
-- why recommended
-- suitable
-- use cases
-- applications
-- benefits
+sales
+- buy
+- order
+- purchase
+- quantity
+- checkout
+- review order
+- modify order
+- confirm order
 
 product_details
 - price
@@ -196,25 +177,6 @@ product_details
 - size
 - features
 - printing options
-
-comparison
-- compare
-- comparison
-- versus
-- vs
-- difference
-- which is better
-- better than
-
-order
-- buy
-- order
-- purchase
-- quantity
-- checkout
-- review order
-- modify order
-- confirm order
 `,
 
       userMessage: message,

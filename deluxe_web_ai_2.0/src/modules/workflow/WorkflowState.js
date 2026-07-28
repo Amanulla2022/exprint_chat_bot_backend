@@ -45,7 +45,22 @@ export default class WorkflowState {
 
     return config.interruptibleBy.includes(capability);
   }
+
   clear(state) {
+    switch (state.workflow) {
+      case "SALES":
+        state.liveRequirement = null;
+        break;
+
+      case "LEAD":
+        state.leadRequest = null;
+        break;
+
+      case "RECOMMENDATION":
+        state.recommendationContext = null;
+        break;
+    }
+
     state.workflow = null;
     state.currentStep = null;
     state.awaitingDecision = false;
@@ -171,8 +186,11 @@ export default class WorkflowState {
     ) {
       state.workflowStack.push({
         workflow: state.workflow,
+
         currentStep: state.currentStep,
+
         awaitingDecision: state.awaitingDecision,
+
         routing: state.routing ? { ...state.routing } : null,
 
         recommendationContext: state.recommendationContext
@@ -181,7 +199,9 @@ export default class WorkflowState {
 
         leadRequest: state.leadRequest ? { ...state.leadRequest } : null,
 
-        order: state.order ? { ...state.order } : null,
+        liveRequirement: state.liveRequirement
+          ? { ...state.liveRequirement }
+          : null,
       });
     }
 
@@ -211,8 +231,8 @@ export default class WorkflowState {
         state.leadRequest = paused.leadRequest;
         break;
 
-      case "ORDER":
-        state.order = paused.order;
+      case "SALES":
+        state.liveRequirement = paused.liveRequirement;
         break;
     }
 

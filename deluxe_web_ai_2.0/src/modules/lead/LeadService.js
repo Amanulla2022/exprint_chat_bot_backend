@@ -8,79 +8,64 @@ const intentResolver = new LeadIntentResolver();
 
 export default class LeadService {
   async process(state) {
-    let lead = state.leadRequest ?? manager.createLead();
+    let lead =
+      state.leadRequest ??
+      manager.createLead({
+        customer: state.customer,
+        order: state.liveRequirement,
+      });
 
     /*
      * =====================================================
-     * First entry into Lead workflow
+     * First Entry
      * =====================================================
      */
 
-    if (!state.leadRequest && !state.currentStep) {
-      /*
-       * =====================================================
-       * Resolve Lead Intent
-       * =====================================================
-       */
+    if (!state.currentStep) {
+      let priority = null;
 
-      const intent = await intentResolver.resolve(state.userMessage);
+      if (!lead.type) {
+        const intent = await intentResolver.resolve(state.userMessage);
 
-      manager.updateType(lead, intent.type);
+        manager.updateType(lead, intent.type);
 
-      /*
-       * =====================================================
-       * Metadata
-       * =====================================================
-       */
+        priority = intent.priority ?? null;
+      }
 
       state.metadata = {
         ...(state.metadata ?? {}),
-        leadType: intent.type,
-        leadPriority: intent.priority,
+        leadType: lead.type,
+        leadPriority: priority,
       };
 
-      /*
-       * =====================================================
-       * Status
-       * =====================================================
-       */
-
       manager.updateStatus(lead, "COLLECTING_CUSTOMER");
-
-      const nextQuestion = manager.getNextQuestion(lead);
 
       return {
         status: "COLLECTING_CUSTOMER",
 
         leadRequest: lead,
 
-        awaitingDecision: false,
+        awaitingDecision: true,
 
-        currentStep: nextQuestion.step,
+        currentStep: "COLLECT_CUSTOMER",
 
-        response: nextQuestion,
+        response: manager.getCustomerForm(lead),
       };
     }
 
     /*
      * =====================================================
-     * Extract ONLY current field
+     * Collect Form Data
      * =====================================================
      */
 
     const extracted = await extractor.extract(state);
 
-    /*
-     * =====================================================
-     * Merge Extracted Data
-     * =====================================================
-     */
-
     manager.updateCustomer(lead, extracted);
 
     /*
      * =====================================================
-     * Lead Type
+     * Resolve Lead Type
      * =====================================================
      */
 
@@ -92,79 +77,55 @@ export default class LeadService {
 
     /*
      * =====================================================
-     * Validate Phone
+     * Validate Form
      * =====================================================
      */
 
-    if (lead.customer.phone && !manager.isPhoneValid(lead.customer.phone)) {
-      return {
-        status: "COLLECTING_CUSTOMER",
+    const errors = {};
 
-        leadRequest: lead,
-
-        awaitingDecision: false,
-
-        currentStep: "ASK_PHONE",
-
-        response: {
-          step: "ASK_PHONE",
-
-          field: "phone",
-
-          message:
-            "That doesn't appear to be a valid phone number. Please enter your phone number again.",
-        },
-      };
+    if (!manager.isNameValid(lead.customer.name)) {
+      errors.name = "Please enter your full name.";
     }
 
-    /*
-     * =====================================================
-     * Validate Email
-     * =====================================================
-     */
-
-    if (lead.customer.email && !manager.isEmailValid(lead.customer.email)) {
-      return {
-        status: "COLLECTING_CUSTOMER",
-
-        leadRequest: lead,
-
-        awaitingDecision: false,
-
-        currentStep: "ASK_EMAIL",
-
-        response: {
-          step: "ASK_EMAIL",
-
-          field: "email",
-
-          message:
-            "That doesn't appear to be a valid email address. Please enter it again.",
-        },
-      };
+    if (!manager.isPhoneValid(lead.customer.phone)) {
+      errors.phone = "Please enter a valid phone number.";
     }
 
-    /*
-     * =====================================================
-     * Ask Next Question
-     * =====================================================
-     */
-    const nextQuestion = manager.getNextQuestion(lead);
+    if (!manager.isEmailValid(lead.customer.email)) {
+      errors.email = "Please enter a valid email address.";
+    }
 
-    if (nextQuestion.step !== "LEAD_COMPLETED") {
+    if (
+      lead.customer.company &&
+      !manager.isCompanyValid(lead.customer.company)
+    ) {
+      errors.company = "Please enter a valid company name.";
+    }
+
+    if (Object.keys(errors).length) {
       manager.updateStatus(lead, "COLLECTING_CUSTOMER");
 
       return {
         status: "COLLECTING_CUSTOMER",
+
         leadRequest: lead,
-        awaitingDecision: false,
-        currentStep: nextQuestion.step,
-        response: nextQuestion,
+
+        awaitingDecision: true,
+
+        currentStep: "COLLECT_CUSTOMER",
+
+        response: {
+          ...manager.getCustomerForm(lead),
+
+          errors,
+        },
       };
     }
 
     /*
+     * =====================================================
      * Lead Completed
+     * =====================================================
      */
 
     manager.assignSalesPerson(lead, {
@@ -176,13 +137,46 @@ export default class LeadService {
 
     return {
       status: "COMPLETED",
+
       leadRequest: lead,
+
       awaitingDecision: false,
-      currentStep: null,
+
+      currentStep: "LEAD_COMPLETED",
+
       response: {
         step: "LEAD_COMPLETED",
+
+        title: "Request Submitted Successfully",
+
         message:
-          "Thank you. Your request has been submitted successfully. One of our product specialists will contact you shortly.",
+          "Thank you for choosing Deluxe Printing. Your request has been received successfully.\n\nOur product specialist will review your requirements and prepare a personalized quotation. We'll contact you as soon as possible using the contact details you provided.",
+
+        support: {
+          title: "Need immediate assistance?",
+
+          description:
+            "If you have additional artwork, files, or specifications to share, you can send them directly via WhatsApp or email using the contact information below.",
+
+          channels: [
+            {
+              type: "email",
+              label: "Email",
+              value: "sales@deluxeprinting.ae",
+            },
+            {
+              type: "phone",
+              label: "Call Us",
+              value: "+971XXXXXXXXX",
+            },
+            {
+              type: "whatsapp",
+              label: "WhatsApp",
+              value: "+971XXXXXXXXX",
+              url: "https://wa.me/971XXXXXXXXX",
+            },
+          ],
+        },
       },
     };
   }

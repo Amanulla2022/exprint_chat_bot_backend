@@ -14,6 +14,14 @@ export default class RoutingService {
    */
 
   async route(state) {
+    console.log("===== ROUTE INPUT =====");
+    console.log({
+      workflow: state.workflow,
+      currentStep: state.currentStep,
+      awaitingDecision: state.awaitingDecision,
+      action: state.action,
+    });
+
     try {
       /*
        * =====================================================
@@ -22,7 +30,11 @@ export default class RoutingService {
        */
 
       if (state.action) {
+        console.log("ACTION FOUND");
+
         const actionRouting = engine.routeAction(state.action);
+
+        console.log("ACTION ROUTING:", actionRouting);
 
         if (actionRouting) {
           return validator.validate(actionRouting);
@@ -35,10 +47,14 @@ export default class RoutingService {
        * =====================================================
        */
 
+      console.log("WORKFLOW ACTIVE:", workflow.isActive(state));
       if (workflow.isActive(state)) {
+        console.log("ROUTING WORKFLOW");
         return this.routeWorkflow(state);
       }
 
+      console.log("ROUTING INTENT");
+      return this.routeIntent(state);
       /*
        * =====================================================
        * Normal Routing

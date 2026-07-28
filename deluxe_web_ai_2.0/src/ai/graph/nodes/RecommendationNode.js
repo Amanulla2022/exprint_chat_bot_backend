@@ -1,11 +1,11 @@
-import SalesAgent from "../../agents/SalesAgent.js";
+import RecommendationAgent from "../../agents/RecommendationAgent.js";
 
-const salesAgent = new SalesAgent();
+const ecommendationAgent = new RecommendationAgent();
 
 export default class RecommendationNode {
   async execute(state) {
     // console.log("RecommendationNode Executed");
 
-    return salesAgent.execute(state);
+    return RecommendationAgent.execute(state);
   }
 }

@@ -123,206 +123,59 @@ export default function useChat() {
     [loading, sessionId],
   );
 
-  /* -------------------------------------------------- */
+  const FORWARD_ACTIONS = new Set([
+    // Recommendation
+    "RECOMMENDATION_BUSINESS",
+    "RECOMMENDATION_INDIVIDUAL",
+    "BUSINESS_CAFE",
+    "BUSINESS_RESTAURANT",
+    "BUSINESS_HOTEL",
+    "BUSINESS_RETAIL",
+    "BUSINESS_HOSPITAL",
+    "BUSINESS_OTHER",
+    "GOAL_BRANDING",
+    "GOAL_PROMOTION",
+    "GOAL_PACKAGING",
+    "GOAL_SIGNAGE",
 
-  // const handleAction = useCallback(
-  //   (action) => {
-  //     if (!action) return;
+    // Product
+    "START_ORDER",
+    "ORDER_PRODUCT",
+    "SHOW_PRODUCT_DETAILS",
+    "COMPARE_PRODUCT",
+    "COMPARE_PRODUCTS",
+    "GET_QUOTE",
+    "CONTACT_SALES",
 
-  //     const { id, payload = {} } = action;
-
-  //     switch (id) {
-  //       case "SHOW_PRODUCT_DETAILS": {
-  //         if (!payload.product) return;
-
-  //         sendMessage(payload.product);
-  //         break;
-  //       }
-
-  //       case "ORDER_PRODUCT": {
-  //         if (!payload.product) return;
-
-  //         sendMessage(`I want to order ${payload.product}`);
-  //         break;
-  //       }
-
-  //       case "CONTACT_SALES": {
-  //         sendMessage("I want to contact sales");
-  //         break;
-  //       }
-
-  //       case "REVIEW_ORDER": {
-  //         sendMessage("I want to review my order");
-  //         break;
-  //       }
-  //       case "MODIFY_ORDER": {
-  //         sendMessage("I want to modify my order");
-  //         break;
-  //       }
-  //       case "ADD_ANOTHER_ITEM": {
-  //         sendMessage("I want to add another item to my order");
-  //         break;
-  //       }
-  //       case "CONFIRM_ORDER": {
-  //         sendMessage("I want to confirm my order");
-  //         break;
-  //       }
-
-  //       default:
-  //         console.warn(`Unhandled action: ${id}`);
-  //     }
-  //   },
-  //   [sendMessage],
-  // );
-
-  // const handleAction = useCallback(
-  //   (action) => {
-  //     if (!action) return;
-
-  //     switch (action.id) {
-  //       /*
-  //        * ===========================================
-  //        * Recommendation
-  //        * ===========================================
-  //        */
-  //       case "REVIEW_ORDER":
-  //         sendMessage("", action);
-  //         break;
-
-  //       case "MODIFY_ORDER":
-  //         sendMessage("", action);
-  //         break;
-
-  //       case "CONFIRM_ORDER":
-  //         sendMessage("", action);
-  //         break;
-
-  //       case "ADD_ANOTHER_PRODUCT":
-  //         sendMessage("", action);
-  //         break;
-
-  //       case "ORDER_PRODUCT":
-  //         sendMessage("", action);
-  //         break;
-
-  //       case "SHOW_PRODUCT_DETAILS":
-  //         sendMessage("", action);
-  //         break;
-
-  //       case "CONTACT_SALES":
-  //         sendMessage("", action);
-  //         break;
-
-  //       case "RECOMMEND_PRODUCTS":
-  //         sendMessage("Recommend products");
-  //         break;
-
-  //       case "CONTACT_SALES":
-  //         sendMessage("I want to talk to a sales expert");
-  //         break;
-
-  //       case "SEND_PROFILE":
-  //         sendMessage("Send me your company profile");
-  //         break;
-
-  //       case "CONTACT_SUPPORT":
-  //         sendMessage("I need customer support");
-  //         break;
-
-  //       case "GET_QUOTE":
-  //         sendMessage("", action);
-  //         break;
-
-  //       case "ASK_BUSINESS":
-  //         sendMessage("", action);
-  //         break;
-
-  //       case "ASK_INDIVIDUAL":
-  //         sendMessage("", action);
-  //         break;
-
-  //       default:
-  //         console.warn("Unhandled action:", action.id);
-  //     }
-  //   },
-  //   [sendMessage],
-  // );
+    // Sales
+    "SELECT_PRODUCT",
+    "SHOW_SELECTIONS",
+    "SELECT_SELECTION",
+    "COLLECT_PRODUCT_FIELD",
+    "COLLECT_REQUIREMENT",
+    "COLLECT_ADDONS",
+    "COLLECT_QUANTITY",
+    "COLLECT_ARTWORK",
+    "SELECT_DELIVERY_METHOD",
+    "ASK_DELIVERY_ADDRESS",
+    "ASK_DELIVERY_DATE",
+    "REVIEW_ORDER",
+    "CONFIRM_ORDER",
+    "CANCEL_ORDER",
+    "ORDER_COMPLETED",
+    "SUBMIT_LEAD",
+  ]);
 
   const handleAction = useCallback(
     (action) => {
       if (!action) return;
 
+      if (FORWARD_ACTIONS.has(action.id)) {
+        sendMessage("", action);
+        return;
+      }
+
       switch (action.id) {
-        /*
-         * ===========================================
-         * Recommendation Workflow
-         * ===========================================
-         */
-
-        case "RECOMMENDATION_BUSINESS":
-        case "RECOMMENDATION_INDIVIDUAL":
-
-        case "BUSINESS_CAFE":
-        case "BUSINESS_RESTAURANT":
-        case "BUSINESS_HOTEL":
-        case "BUSINESS_RETAIL":
-        case "BUSINESS_HOSPITAL":
-        case "BUSINESS_OTHER":
-
-        case "GOAL_BRANDING":
-        case "GOAL_PROMOTION":
-        case "GOAL_PACKAGING":
-        case "GOAL_SIGNAGE":
-
-        case "ORDER_PRODUCT":
-        case "SHOW_PRODUCT_DETAILS":
-        case "GET_QUOTE":
-        case "CONTACT_SALES":
-          sendMessage("", action);
-          break;
-        /*
-         * ===========================================
-         * Product & Ordering
-         * ===========================================
-         */
-
-        case "START_ORDER":
-        case "ORDER_PRODUCT":
-        case "SHOW_PRODUCT_DETAILS":
-        case "COMPARE_PRODUCT":
-        case "COMPARE_PRODUCTS":
-        case "GET_QUOTE":
-        case "CONTACT_SALES":
-          sendMessage("", action);
-          break;
-
-        /*
-         * ===========================================
-         * Order Workflow
-         * ===========================================
-         */
-
-        case "CONTINUE_ORDER":
-        case "ADD_MORE_ITEMS":
-        case "ADD_RELATED_PRODUCT":
-        case "REVIEW_ORDER":
-        case "EDIT_ORDER":
-        case "CONFIRM_ORDER":
-        case "CANCEL_ORDER":
-
-        case "SUBMIT_ORDER":
-        case "submit":
-
-        case "cancel":
-          sendMessage("", action);
-          break;
-
-        /*
-         * ===========================================
-         * Quick Actions
-         * ===========================================
-         */
-
         case "RECOMMEND_PRODUCTS":
           sendMessage("Recommend products");
           break;
@@ -335,13 +188,16 @@ export default function useChat() {
           sendMessage("I need customer support");
           break;
 
+        case "SUBMIT_LEAD":
+          sendMessage("", action);
+          break;
+
         default:
           console.warn("Unhandled action:", action.id);
       }
     },
     [sendMessage],
   );
-
   /* -------------------------------------------------- */
 
   const clearChat = () => {

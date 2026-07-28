@@ -1,20 +1,20 @@
 export default {
-  RECOMMENDATION: {
-    capability: "recommendation",
-    persistent: true,
+  // RECOMMENDATION: {
+  //   capability: "recommendation",
+  //   persistent: true,
 
-    completed: ["SHOW_RECOMMENDATIONS", "RECOMMENDATION_COMPLETED"],
+  //   completed: ["SHOW_RECOMMENDATIONS", "RECOMMENDATION_COMPLETED"],
 
-    interruptibleBy: [
-      "greeting",
-      "faq",
-      "support",
-      "product_details",
-      "comparison",
-      "discovery",
-      "out_of_scope",
-    ],
-  },
+  //   interruptibleBy: [
+  //     "greeting",
+  //     "faq",
+  //     "support",
+  //     "product_details",
+  //     "comparison",
+  //     "discovery",
+  //     "out_of_scope",
+  //   ],
+  // },
 
   LEAD: {
     capability: "lead",
@@ -33,19 +33,18 @@ export default {
     ],
   },
 
-  ORDER: {
-    capability: "order",
+  SALES: {
+    capability: "sales",
+
     persistent: true,
 
-    completed: ["ORDER_COMPLETED"],
+    completed: ["SALES_COMPLETED"],
 
     interruptibleBy: [
       "greeting",
       "faq",
       "support",
       "product_details",
-      "comparison",
-      "discovery",
       "out_of_scope",
     ],
   },

@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Sparkles,
-  ShoppingBag,
-  Package,
-  Scale,
-  FileText,
-  Search,
-  ArrowRight,
-} from "lucide-react";
+import { Sparkles, Package, FileText, ArrowRight } from "lucide-react";
 
 import { motion } from "framer-motion";
 
@@ -16,33 +8,21 @@ import { useChatContext } from "../../context/ChatContext";
 
 const QUICK_ACTIONS = [
   {
-    icon: ShoppingBag,
-    title: "Recommendations",
-    description: "Find the best products",
-    prompt: "Recommend products",
-  },
-  // {
-  //   icon: Package,
-  //   title: "Place Order",
-  //   description: "Start a new printing order",
-  //   prompt: "I want to order business cards",
-  // },
-  {
-    icon: Scale,
-    title: "Compare",
-    description: "Compare two products",
-    prompt: "Compare paper cups vs napkins",
+    icon: Package,
+    title: "Order Business Cards",
+    description: "Start a business card order",
+    prompt: "I want to order business cards",
   },
   {
-    icon: Search,
-    title: "Product Details",
-    description: "Learn about any product",
-    prompt: "Tell me about brochures",
+    icon: Package,
+    title: "Order Self Ink Stamps",
+    description: "Start a stamp order",
+    prompt: "I want to order self ink stamps",
   },
   {
     icon: FileText,
-    title: "Quotation",
-    description: "Request a quotation",
+    title: "Request Quotation",
+    description: "Get a quotation for printing",
     prompt: "Request quotation",
   },
 ];

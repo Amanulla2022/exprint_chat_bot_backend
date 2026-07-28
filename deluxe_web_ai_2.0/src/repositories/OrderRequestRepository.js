@@ -68,7 +68,7 @@ export default class OrderRepository {
       return null;
     }
 
-    const order = await OrderModel.findOne({
+    return OrderModel.findOne({
       sessionId,
       status: {
         $nin: ["CONFIRMED", "CANCELLED", "DELETED"],
@@ -76,12 +76,6 @@ export default class OrderRepository {
     }).sort({
       createdAt: -1,
     });
-
-    // console.log("========== LOADED ORDER ==========");
-    // console.dir(order?.items, { depth: null });
-    // console.log("==================================");
-
-    return order;
   }
 
   /*
@@ -173,7 +167,8 @@ export default class OrderRepository {
         },
       },
       {
-        new: true,
+        returnDocument: "after",
+        runValidators: true,
       },
     );
   }
@@ -198,7 +193,8 @@ export default class OrderRepository {
         },
       },
       {
-        new: true,
+        returnDocument: "after",
+        runValidators: true,
       },
     );
   }
@@ -223,7 +219,8 @@ export default class OrderRepository {
         },
       },
       {
-        new: true,
+        returnDocument: "after",
+        runValidators: true,
       },
     );
   }
@@ -248,7 +245,8 @@ export default class OrderRepository {
         },
       },
       {
-        new: true,
+        returnDocument: "after",
+        runValidators: true,
       },
     );
   }
@@ -273,50 +271,71 @@ export default class OrderRepository {
         },
       },
       {
-        new: true,
+        returnDocument: "after",
+        runValidators: true,
       },
     );
   }
 
-  async saveDraft(sessionId, conversationId, order) {
-    // console.log("========== SAVING ORDER ==========");
-    // console.dir(order.items, { depth: null });
-    // console.log("==================================");
-    return OrderModel.findOneAndUpdate(
+  /*
+   * =====================================================
+   * Save Draft Order
+   * =====================================================
+   */
+
+  async saveDraft(sessionId, conversationId, order = {}) {
+    if (!order) {
+      return null;
+    }
+    // console.log("========== INPUT ==========");
+    // console.dir(order, { depth: null });
+
+    const update = {
+      conversationId,
+
+      status: order.status,
+      confirmed: order.confirmed,
+
+      customer: order.customer,
+
+      delivery: order.delivery,
+
+      pricing: order.pricing,
+
+      items: order.items,
+
+      totalItems: order.totalItems,
+
+      totalQuantity: order.totalQuantity,
+
+      notes: order.notes,
+
+      leadId: order.leadId,
+
+      orderNumber: order.orderNumber,
+
+      updatedAt: new Date(),
+    };
+
+    // console.log("========== UPDATE ==========");
+    // console.dir(update, { depth: null });
+
+    const doc = await OrderModel.findOneAndUpdate(
+      { sessionId },
       {
-        sessionId,
-      },
-      {
-        $set: {
-          status: order.status,
-
-          customer: order.customer,
-
-          items: order.items,
-
-          totalItems: order.totalItems,
-
-          totalQuantity: order.totalQuantity,
-
-          notes: order.notes,
-
-          leadId: order.leadId,
-
-          orderNumber: order.orderNumber,
-
-          updatedAt: new Date(),
-        },
-
-        $setOnInsert: {
-          sessionId,
-          conversationId,
-          createdAt: new Date(),
-        },
+        $set: update,
+        $setOnInsert: { sessionId },
       },
       {
         upsert: true,
         returnDocument: "after",
+        runValidators: true,
       },
     );
+
+    // console.log("========== RETURN ==========");
+    // console.dir(doc.toObject(), { depth: null });
+
+    return doc;
   }
 }

@@ -27,6 +27,9 @@ export default class ConversationRouter {
    */
 
   route(state) {
+    console.log("Execution Plan:", state.executionPlan);
+    console.log("Current:", this.current(state));
+
     return this.current(state)?.node ?? "ResponseNode";
   }
 

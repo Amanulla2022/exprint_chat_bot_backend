@@ -14,6 +14,33 @@ export default class WorkflowNode {
 
     /*
      * =====================================================
+     * Workflow Transition
+     * =====================================================
+     */
+
+    if (state.workflowTransition) {
+      state.workflowTransition = false;
+
+      const plan = planner.plan(state.capability);
+
+      if (!plan) {
+        state.response = {
+          success: false,
+          type: "error",
+          message: `Workflow not found for '${state.capability}'.`,
+        };
+
+        return state;
+      }
+
+      state.executionPlan = plan;
+      state.currentExecutionIndex = 0;
+
+      return state;
+    }
+
+    /*
+     * =====================================================
      * Continue Existing Workflow
      * =====================================================
      */

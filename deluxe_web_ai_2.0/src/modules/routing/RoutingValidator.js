@@ -1,14 +1,15 @@
 const VALID_CAPABILITIES = new Set([
   "greeting",
-  "recommendation",
-  "discovery",
+  "sales",
   "product_details",
-  "comparison",
-  "order",
   "faq",
   "support",
-  "lead",
   "out_of_scope",
+
+  // "recommendation",
+  // "discovery",
+  // "comparison",
+  "lead",
   "resume_workflow",
   "cancel_workflow",
 ]);
@@ -36,12 +37,6 @@ export default class RoutingValidator {
     };
   }
 
-  /*
-   * =====================================================
-   * Capability
-   * =====================================================
-   */
-
   validateCapability(capability) {
     if (typeof capability === "string" && VALID_CAPABILITIES.has(capability)) {
       return capability;
@@ -49,12 +44,6 @@ export default class RoutingValidator {
 
     return "out_of_scope";
   }
-
-  /*
-   * =====================================================
-   * Confidence
-   * =====================================================
-   */
 
   validateConfidence(confidence) {
     const value = Number(confidence);
@@ -65,12 +54,6 @@ export default class RoutingValidator {
 
     return Math.max(0, Math.min(1, value));
   }
-
-  /*
-   * =====================================================
-   * Source
-   * =====================================================
-   */
 
   validateSource(source) {
     if (VALID_SOURCES.has(source)) {

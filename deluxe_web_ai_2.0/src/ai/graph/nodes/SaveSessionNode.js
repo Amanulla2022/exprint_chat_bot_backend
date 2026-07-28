@@ -11,6 +11,8 @@ const memoryService = new MemoryService();
 
 export default class SaveSessionNode {
   async execute(state) {
+    console.log("SAVE NODE currentStep:", state.currentStep);
+
     /*
      * =====================================================
      * Synchronize Customer
@@ -30,17 +32,25 @@ export default class SaveSessionNode {
      * =====================================================
      */
 
-    // console.log("BEFORE MERGE");
-    // console.dir(state.recommendationContext, { depth: null });
+    console.log("========== BEFORE MEMORY MERGE ==========");
+
+    console.log("state.liveRequirement");
+    console.dir(state.liveRequirement, { depth: null });
+
+    console.log("state.order");
+    console.dir(state.order, { depth: null });
 
     state.memory = memoryService.merge(state.memory, state);
-
-    // console.log("AFTER MERGE");
-    // console.dir(state.memory.recommendationContext, { depth: null });
 
     state.recommendation = state.memory.recommendation;
 
     state.recommendationContext = state.memory.recommendationContext;
+
+    state.memory = memoryService.merge(state.memory, state);
+
+    console.log("========== AFTER MEMORY MERGE ==========");
+
+    console.dir(state.memory.liveRequirement, { depth: null });
 
     /*
      * =====================================================
@@ -64,23 +74,12 @@ export default class SaveSessionNode {
      * =====================================================
      */
 
-    // console.log("==== BEFORE SAVE ====");
-    // console.dir(
-    //   {
-    //     dirty: state.persistence?.conversation?.dirty,
-    //     workflow: state.workflow,
-    //     currentStep: state.currentStep,
-    //     recommendationActive: state.recommendationContext?.active,
-    //   },
-    //   { depth: null },
-    // );
-
     if (true) {
       const active =
         state.order &&
         !["CONFIRMED", "CANCELLED", "DELETED"].includes(state.order.status);
 
-      const workflow = active ? "ORDER" : (state.workflow ?? null);
+      const workflow = active ? "SALES" : (state.workflow ?? null);
       /*
        * Order workflow is now form-based.
        * Only Recommendation / Lead persist conversational steps.
@@ -88,6 +87,7 @@ export default class SaveSessionNode {
       const currentStep = state.order?.active
         ? null
         : (state.currentStep ?? null);
+
       const conversationUpdate = {
         customer: state.customer,
 
@@ -113,6 +113,11 @@ export default class SaveSessionNode {
         updatedAt: new Date(),
       };
 
+      console.log({
+        workflow,
+        currentStep,
+      });
+
       state.conversation = await conversationRepository.update(
         {
           sessionId: state.sessionId,
@@ -126,16 +131,6 @@ export default class SaveSessionNode {
       );
 
       const db = await conversationRepository.findBySessionId(state.sessionId);
-
-      // console.log("==== DATABASE ====");
-      // console.dir(
-      //   {
-      //     workflow: db.workflow,
-      //     currentStep: db.currentStep,
-      //     recommendationActive: db.memory?.recommendationContext?.active,
-      //   },
-      //   { depth: null },
-      // );
 
       /*
        * =====================================================
@@ -194,6 +189,10 @@ export default class SaveSessionNode {
      * =====================================================
      */
 
+    console.log("========== ORDER BEFORE SAVE ==========");
+
+    console.dir(state.order, { depth: null });
+
     if (state.persistence?.order?.dirty && state.order) {
       /*
        * Order no longer stores conversational workflow state.
@@ -218,17 +217,15 @@ export default class SaveSessionNode {
       state.persistence.order.dirty = false;
     }
 
-    // console.log("========== SAVE ==========");
-    // console.log({
-    //   workflow: state.workflow,
-    //   orderActive: state.order?.active,
-    //   currentStep: state.currentStep,
-    //   awaitingDecision: state.awaitingDecision,
-    //   recommendationActive: state.recommendationContext?.active,
-    //   dirty: state.persistence?.conversation?.dirty,
-    // });
-    // console.log("==========================");
+    // const savedOrder = await orderRepository.saveDraft(
+    //   state.sessionId,
+    //   state.conversationId,
+    //   state.order,
+    // );
 
+    // state.order = savedOrder;
+
+    console.log("======================================\n");
     return state;
   }
 }

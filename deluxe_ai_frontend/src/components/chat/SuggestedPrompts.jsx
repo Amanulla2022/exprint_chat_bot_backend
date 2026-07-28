@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  Sparkles,
-  ShoppingBag,
-  Scale,
-  Package,
-  FileText,
-  Building2,
-  Coffee,
-  ArrowRight,
-} from "lucide-react";
+import { Sparkles, Package, FileText, ArrowRight } from "lucide-react";
 
 import { motion } from "framer-motion";
 
@@ -17,40 +8,22 @@ import { useChatContext } from "../../context/ChatContext";
 
 const PROMPTS = [
   {
-    icon: ShoppingBag,
-    title: "Product Recommendation",
-    description: "Recommend products for my business",
-    prompt: "Recommend products for my business",
-  },
-  {
-    icon: Scale,
-    title: "Compare Products",
-    description: "Paper Cups vs Napkins",
-    prompt: "Compare paper cups vs napkins for customer experience",
-  },
-  {
     icon: Package,
-    title: "Start Order",
-    description: "Order Business Cards",
+    title: "Order Business Cards",
+    description: "Start a business card order",
     prompt: "I want to order business cards",
   },
   {
+    icon: Package,
+    title: "Order Self Ink Stamps",
+    description: "Start a stamp order",
+    prompt: "I want to order self ink stamps",
+  },
+  {
     icon: FileText,
-    title: "Request Quote",
-    description: "Generate quotation",
+    title: "Request Quotation",
+    description: "Get a quotation for printing",
     prompt: "Request quotation",
-  },
-  {
-    icon: Coffee,
-    title: "Cafe Branding",
-    description: "Branding products",
-    prompt: "Recommend products for my cafe",
-  },
-  {
-    icon: Building2,
-    title: "Corporate Office",
-    description: "Corporate branding",
-    prompt: "Recommend branding products for my corporate office",
   },
 ];
 

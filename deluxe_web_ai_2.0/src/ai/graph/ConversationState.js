@@ -27,21 +27,15 @@ const ConversationState = Annotation.Root({
     default: () => [],
   }),
 
-  /*
-   * =====================================================
-   * Order
-   * =====================================================
-   */
-
-  order: Annotation({
+  liveRequirement: Annotation({
     default: () => null,
   }),
 
-  orderContext: Annotation({
+  sales: Annotation({
     default: () => null,
   }),
 
-  currentField: Annotation({
+  assistantMessage: Annotation({
     default: () => null,
   }),
 
@@ -146,6 +140,14 @@ const ConversationState = Annotation.Root({
         updatedAt: null,
       },
     }),
+  }),
+
+  order: Annotation({
+    default: () => null,
+  }),
+
+  orderContext: Annotation({
+    default: () => null,
   }),
 
   routing: Annotation({

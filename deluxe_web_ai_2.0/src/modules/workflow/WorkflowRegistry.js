@@ -5,18 +5,18 @@ export default {
     persistent: false,
   },
 
-  recommendation: {
-    capability: "recommendation",
-    node: "RecommendationNode",
-    persistent: true,
-    workflow: "RECOMMENDATION",
-  },
+  // recommendation: {
+  //   capability: "recommendation",
+  //   node: "RecommendationNode",
+  //   persistent: true,
+  //   workflow: "RECOMMENDATION",
+  // },
 
-  discovery: {
-    capability: "discovery",
-    node: "DiscoveryNode",
-    persistent: false,
-  },
+  // discovery: {
+  //   capability: "discovery",
+  //   node: "DiscoveryNode",
+  //   persistent: false,
+  // },
 
   product_details: {
     capability: "product_details",
@@ -24,11 +24,11 @@ export default {
     persistent: false,
   },
 
-  comparison: {
-    capability: "comparison",
-    node: "ComparisonNode",
-    persistent: false,
-  },
+  // comparison: {
+  //   capability: "comparison",
+  //   node: "ComparisonNode",
+  //   persistent: false,
+  // },
 
   faq: {
     capability: "faq",
@@ -49,16 +49,16 @@ export default {
     workflow: "LEAD",
   },
 
+  sales: {
+    capability: "sales",
+    node: "SalesNode",
+    persistent: true,
+    workflow: "SALES",
+  },
+
   out_of_scope: {
     capability: "out_of_scope",
     node: "OutOfScopeNode",
     persistent: false,
-  },
-
-  order: {
-    capability: "order",
-    node: "OrderNode",
-    persistent: true,
-    workflow: "ORDER",
   },
 };

@@ -5,9 +5,9 @@ import {
   SERVICE_PATTERNS,
   SUPPORT_PATTERNS,
   LEAD_PATTERNS,
-  COMPARISON_PATTERNS,
+  // COMPARISON_PATTERNS,
   DETAIL_PATTERNS,
-  ORDER_PATTERNS,
+  SALES_PATTERNS,
   DISCOVERY_PATTERNS,
 } from "../utils/RoutingConstants.js";
 
@@ -15,12 +15,6 @@ const llm = new LLMService();
 
 export default class IntentRouter {
   async classify(state) {
-    /*
-     * =====================================================
-     * Normalize Message
-     * =====================================================
-     */
-
     const message = (state.userMessage ?? "").trim();
 
     if (!message) {
@@ -32,20 +26,6 @@ export default class IntentRouter {
     }
 
     const normalized = message.toLowerCase();
-
-    /*
-     * =====================================================
-     * Comparison
-     * =====================================================
-     */
-
-    if (COMPARISON_PATTERNS.some((pattern) => pattern.test(normalized))) {
-      return {
-        capability: "comparison",
-        confidence: 1,
-        source: "RULE",
-      };
-    }
 
     /*
      * =====================================================
@@ -63,27 +43,13 @@ export default class IntentRouter {
 
     /*
      * =====================================================
-     * Discovery
+     * Sales
      * =====================================================
      */
 
-    if (DISCOVERY_PATTERNS.some((pattern) => pattern.test(normalized))) {
+    if (SALES_PATTERNS.some((pattern) => pattern.test(normalized))) {
       return {
-        capability: "discovery",
-        confidence: 1,
-        source: "RULE",
-      };
-    }
-
-    /*
-     * =====================================================
-     * Order
-     * =====================================================
-     */
-
-    if (ORDER_PATTERNS.some((pattern) => pattern.test(normalized))) {
-      return {
-        capability: "order",
+        capability: "sales",
         confidence: 1,
         source: "RULE",
       };
@@ -119,6 +85,34 @@ export default class IntentRouter {
 
     /*
      * =====================================================
+     * Comparison
+     * =====================================================
+     */
+
+    // if (COMPARISON_PATTERNS.some((pattern) => pattern.test(normalized))) {
+    //   return {
+    //     capability: "comparison",
+    //     confidence: 1,
+    //     source: "RULE",
+    //   };
+    // }
+
+    /*
+     * =====================================================
+     * Discovery
+     * =====================================================
+     */
+
+    if (DISCOVERY_PATTERNS.some((pattern) => pattern.test(normalized))) {
+      return {
+        capability: "discovery",
+        confidence: 1,
+        source: "RULE",
+      };
+    }
+
+    /*
+     * =====================================================
      * Lead
      * =====================================================
      */
@@ -145,12 +139,10 @@ export default class IntentRouter {
           type: "string",
 
           enum: [
-            "comparison",
-            "product_details",
-            "discovery",
-            "order",
-            "faq",
+            "sales",
             "lead",
+            "product_details",
+            "faq",
             "support",
             "out_of_scope",
           ],

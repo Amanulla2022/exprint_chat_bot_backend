@@ -18,7 +18,7 @@ import ProductDetailsNode from "./nodes/ProductDetailsNode.js";
 import ComparisonNode from "./nodes/ComparisonNode.js";
 import DiscoveryNode from "./nodes/DiscoveryNode.js";
 import OutOfScopeNode from "./nodes/OutOfScopeNode.js";
-import OrderNode from "./nodes/OrderNode.js";
+import SalesNode from "./nodes/SalesNode.js";
 
 const loadSessionNode = new LoadSessionNode();
 const routingNode = new RoutingNode();
@@ -31,7 +31,7 @@ const conversationRouter = new ConversationRouter();
 const leadNode = new LeadNode();
 const greetingNode = new GreetingNode();
 const productDetailsNode = new ProductDetailsNode();
-const orderNode = new OrderNode();
+const salesNode = new SalesNode();
 
 const comparisonNode = new ComparisonNode();
 
@@ -76,7 +76,7 @@ export default function createConversationGraph() {
 
     .addNode("DiscoveryNode", discoveryNode.execute.bind(discoveryNode))
 
-    .addNode("OrderNode", orderNode.execute.bind(orderNode))
+    .addNode("SalesNode", salesNode.execute.bind(salesNode))
 
     .addNode("OutOfScopeNode", outofscopeNode.execute.bind(outofscopeNode));
 
@@ -112,7 +112,7 @@ export default function createConversationGraph() {
     "FAQNode",
     "GreetingNode",
     "DiscoveryNode",
-    "OrderNode",
+    "SalesNode",
     "OutOfScopeNode",
   ];
 

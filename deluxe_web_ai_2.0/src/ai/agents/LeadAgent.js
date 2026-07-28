@@ -8,34 +8,23 @@ const leadService = new LeadService();
 
 export default class LeadAgent extends BaseAgent {
   async execute(state) {
-    console.log("LEAD EXIT");
-    console.log(state.persistence);
-
     console.log("LeadAgent Executed");
 
     const result = await leadService.process(state);
+
+    /*
+     * =====================================================
+     * Lead
+     * =====================================================
+     */
+
     state.leadRequest = result.leadRequest;
 
-    if (
-      state.order &&
-      state.leadRequest &&
-      state.leadRequest.type === "ORDER_REQUEST"
-    ) {
-      state.order.leadId = state.leadRequest._id ?? null;
-
-      state.persistence.order.dirty = true;
-    }
-
-    state.workflow = "LEAD";
-
-    state.currentStep = result.currentStep ?? result.response?.step ?? null;
-
-    state.awaitingDecision = result.awaitingDecision ?? false;
-
-    if (result.status === "COMPLETED") {
-      state.workflow = null;
-      state.currentStep = null;
-    }
+    /*
+     * =====================================================
+     * Customer
+     * =====================================================
+     */
 
     if (state.leadRequest?.customer) {
       state.customer = {
@@ -43,6 +32,36 @@ export default class LeadAgent extends BaseAgent {
         ...state.leadRequest.customer,
       };
     }
+
+    /*
+     * =====================================================
+     * Workflow
+     * =====================================================
+     */
+
+    state.workflow = "LEAD";
+
+    state.currentStep = result.currentStep ?? result.response?.step ?? null;
+
+    state.awaitingDecision = result.awaitingDecision ?? false;
+
+    /*
+     * =====================================================
+     * Completed
+     * Let WorkflowState clear the workflow.
+     * =====================================================
+     */
+
+    if (result.status === "COMPLETED") {
+      state.currentStep = "LEAD_COMPLETED";
+      state.awaitingDecision = false;
+    }
+
+    /*
+     * =====================================================
+     * Persistence
+     * =====================================================
+     */
 
     state.persistence.leadRequest.dirty = true;
     state.persistence.leadRequest.updatedAt = new Date();
@@ -53,7 +72,14 @@ export default class LeadAgent extends BaseAgent {
     state.persistence.conversation.dirty = true;
     state.persistence.conversation.updatedAt = new Date();
 
+    /*
+     * =====================================================
+     * Response
+     * =====================================================
+     */
+
     state.response = responseBuilder.lead(result.response);
+
     return state;
   }
 }

@@ -82,45 +82,59 @@ const ACTION_CONFIG = {
     variant: "danger",
   },
 
-  /*
-   * =====================================================
-   * Order
-   * =====================================================
-   */
-
-  ADD_RELATED_PRODUCT: {
-    icon: PlusCircle,
+  SELECT_PRODUCT: {
+    icon: Package,
     variant: "primary",
   },
 
-  CONTINUE_ORDER: {
-    icon: ArrowRight,
-    variant: "secondary",
-  },
-
-  ADD_MORE_ITEMS: {
+  SHOW_SELECTIONS: {
     icon: Package,
     variant: "secondary",
   },
 
-  REVIEW_ORDER: {
+  SELECT_SELECTION: {
+    icon: CheckCircle2,
+    variant: "primary",
+  },
+
+  COLLECT_PRODUCT_FIELD: {
     icon: ClipboardList,
     variant: "primary",
   },
 
-  CONFIRM_ORDER: {
-    icon: CheckCircle2,
-    variant: "success",
+  COLLECT_REQUIREMENT: {
+    icon: ClipboardList,
+    variant: "primary",
   },
 
-  EDIT_ORDER: {
-    icon: Pencil,
+  COLLECT_ADDONS: {
+    icon: PlusCircle,
     variant: "secondary",
   },
 
-  CANCEL_ORDER: {
-    icon: XCircle,
-    variant: "danger",
+  COLLECT_QUANTITY: {
+    icon: Package,
+    variant: "primary",
+  },
+
+  COLLECT_ARTWORK: {
+    icon: FileText,
+    variant: "primary",
+  },
+
+  SELECT_DELIVERY_METHOD: {
+    icon: ArrowRight,
+    variant: "primary",
+  },
+
+  ASK_DELIVERY_ADDRESS: {
+    icon: ArrowRight,
+    variant: "secondary",
+  },
+
+  ASK_DELIVERY_DATE: {
+    icon: ArrowRight,
+    variant: "secondary",
   },
 };
 

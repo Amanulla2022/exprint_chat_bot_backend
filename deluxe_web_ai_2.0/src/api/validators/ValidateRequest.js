@@ -5,10 +5,17 @@ const validateRequest = (schema) => {
     const result = schema.safeParse(req.body);
 
     if (!result.success) {
-      const firstIssue = result.error.issues?.[0] ?? result.error.errors?.[0];
+      console.log("========== VALIDATION ERROR ==========");
+      console.log("Request Body:");
+      console.dir(req.body, { depth: null });
+
+      console.log("Issues:");
+      console.dir(result.error.issues, { depth: null });
 
       return next(
-        new ValidationError(firstIssue?.message ?? "Invalid request."),
+        new ValidationError(
+          result.error.issues[0]?.message ?? "Invalid request.",
+        ),
       );
     }
 

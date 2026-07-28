@@ -273,7 +273,7 @@ export const RECOMMENDATION_RESET_PATTERNS = [
   "for my office",
 ];
 
-export const ORDER_KEYWORDS = [
+export const SALES_KEYWORDS = [
   "order",
   "buy",
   "purchase",
@@ -525,7 +525,7 @@ export const LEAD_PATTERNS = LEAD_KEYWORDS.map(
   (k) => new RegExp(k.replace(/\s+/g, "\\s+"), "i"),
 );
 
-export const ORDER_PATTERNS = ORDER_KEYWORDS.map(
+export const SALES_PATTERNS = SALES_KEYWORDS.map(
   (k) => new RegExp(k.replace(/\s+/g, "\\s+"), "i"),
 );
 
@@ -566,7 +566,7 @@ export const INTERRUPT_PATTERNS = {
 
   recommendation: RECOMMENDATION_PATTERNS,
 
-  order: ORDER_PATTERNS,
+  order: SALES_PATTERNS,
 };
 
 export const ALL_INTERRUPT_PATTERNS = Object.values(INTERRUPT_PATTERNS).flat();

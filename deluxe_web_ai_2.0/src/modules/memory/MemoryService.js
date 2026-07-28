@@ -20,6 +20,8 @@ export default class MemoryService {
 
       selectedProduct: null,
 
+      productSales: null,
+
       comparison: null,
 
       comparisonContext: null,
@@ -42,6 +44,10 @@ export default class MemoryService {
         campaigns: [],
 
         constraints: [],
+
+        liveRequirement: null,
+
+        productSales: null,
 
         originalQuery: null,
 
@@ -74,6 +80,16 @@ export default class MemoryService {
         company: null,
         ...(conversation.customer ?? {}),
       },
+
+      liveRequirement:
+        conversation.memory?.liveRequirement ??
+        conversation.memory?.productSales ??
+        null,
+
+      productSales:
+        conversation.memory?.productSales ??
+        conversation.memory?.liveRequirement ??
+        null,
 
       workflow: conversation.workflow ?? null,
 
@@ -136,6 +152,12 @@ export default class MemoryService {
       currentStep: state.currentStep ?? memory.currentStep,
 
       leadRequest: state.leadRequest ?? memory.leadRequest,
+
+      liveRequirement:
+        state.liveRequirement ?? memory.liveRequirement ?? memory.productSales,
+
+      productSales:
+        state.productSales ?? state.liveRequirement ?? memory.productSales,
 
       recommendation: state.recommendation ?? memory.recommendation,
 

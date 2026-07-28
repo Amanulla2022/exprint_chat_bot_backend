@@ -11,13 +11,14 @@ export default class GroqProvider extends BaseProvider {
 
   getModel(options = {}) {
     const config = {
-      apiKey: process.env.GROQ_API_KEY,
+      // apiKey: process.env.GROQ_API_KEY,
 
-      // apiKey: process.env.LLAMA_API_KEY,
+      apiKey: process.env.LLAMA_RATE_LIMIT_ALTERNATE,
 
-      model: options.model ?? process.env.GROQ_MODEL ?? "llama-3.1-8b-instant",
+      // model: options.model ?? process.env.GROQ_MODEL ?? "groq/compound",
 
-      // model: // options.model ?? process.env.LLAMA_MODEL ?? "llama-3.3-70b-versatile",
+      model:
+        options.model ?? process.env.LLAMA_ALTERNATE_MODEL ?? "llama-3.1-8b-instant",
 
       temperature: options.temperature ?? 0,
 
@@ -58,6 +59,27 @@ export default class GroqProvider extends BaseProvider {
       },
     ]);
 
+    const usage =
+      response.usage_metadata ?? response.response_metadata?.tokenUsage ?? null;
+
+    // console.log("================================");
+    // console.log("GROQ TOKEN USAGE");
+    // console.log("================================");
+
+    if (usage) {
+      console.table({
+        "Prompt Tokens": usage.input_tokens ?? usage.promptTokens,
+
+        "Completion Tokens": usage.output_tokens ?? usage.completionTokens,
+
+        "Total Tokens": usage.total_tokens ?? usage.totalTokens,
+      });
+    } else {
+      console.log("No token usage returned.");
+    }
+
+    console.log("================================");
+
     return this.sanitizeResponse(response.content);
   }
 
@@ -66,37 +88,87 @@ export default class GroqProvider extends BaseProvider {
    * Structured Output (JSON Mode)
    * =====================================================
    */
-
   async invokeStructured({ schema, systemPrompt, userMessage, ...options }) {
     const model = this.getModel(options);
 
     const schemaPrompt = `
-
 Return ONLY valid JSON.
 
-The JSON MUST strictly follow this JSON Schema.
+Structure:
 
-${JSON.stringify(schema, null, 2)}
+{
+  "message": "string",
+  "interaction": "MESSAGE | BUTTONS",
+  "actions": [],
+  "sections": []
+}
 
-Rules
-
+Rules:
 - Return JSON only.
-- Do not use markdown.
-- Do not use code fences.
-- Do not explain anything.
-- Do not output any text before or after the JSON.
+- No markdown.
+- No explanations.
+- message cannot be empty.
 `;
+
+    const finalSystemPrompt = `${systemPrompt}\n${schemaPrompt}`;
+
+    // console.log("================================");
+    // console.log("LLM REQUEST");
+    // console.log("================================");
+    // console.log("System Prompt Length :", finalSystemPrompt.length);
+    // console.log("User Message         :", userMessage);
+    // console.log("================================");
 
     const response = await model.invoke([
       {
         role: "system",
-        content: `${systemPrompt}\n${schemaPrompt}`,
+        content: finalSystemPrompt,
       },
       {
         role: "user",
         content: userMessage,
       },
     ]);
+
+    /*
+     * =====================================================
+     * Token Usage
+     * =====================================================
+     */
+
+    const usage =
+      response.usage_metadata ?? response.response_metadata?.tokenUsage ?? null;
+
+    // console.log("================================");
+    // console.log("TOKEN USAGE");
+    // console.log("================================");
+
+    if (usage) {
+      console.table({
+        "Prompt Tokens": usage.input_tokens ?? usage.promptTokens,
+
+        "Completion Tokens": usage.output_tokens ?? usage.completionTokens,
+
+        "Total Tokens": usage.total_tokens ?? usage.totalTokens,
+      });
+    } else {
+      console.log("No usage metadata returned.");
+    }
+
+    console.log("================================");
+
+    /*
+     * =====================================================
+     * Raw Response
+     * =====================================================
+    //  */
+
+    // console.log("RAW RESPONSE");
+    // console.log("================================");
+
+    // console.dir(response, { depth: null });
+
+    // console.log("================================");
 
     let text = response.content;
 
@@ -105,6 +177,11 @@ Rules
     }
 
     text = String(text);
+
+    // console.log("RAW TEXT");
+    // console.log("================================");
+    // console.log(text);
+    // console.log("================================");
 
     /*
      * =====================================================
@@ -151,9 +228,13 @@ Rules
     } catch (err) {
       console.error("JSON Repair Error");
       console.error(json);
-
       throw err;
     }
+
+    // console.log("PARSED JSON");
+    // console.log("================================");
+    // console.log(json);
+    // console.log("================================");
 
     /*
      * =====================================================
@@ -161,27 +242,13 @@ Rules
      * =====================================================
      */
 
-    return JSON.parse(json);
-  }
+    const parsed = JSON.parse(json);
 
-  /*
-   * =====================================================
-   * Streaming
-   * =====================================================
-   */
+    // console.log("FINAL OBJECT");
+    // console.log("================================");
+    // console.dir(parsed, { depth: null });
+    // console.log("================================");
 
-  async stream({ systemPrompt, userMessage, ...options }) {
-    const model = this.getModel(options);
-
-    return model.stream([
-      {
-        role: "system",
-        content: systemPrompt,
-      },
-      {
-        role: "user",
-        content: userMessage,
-      },
-    ]);
+    return parsed;
   }
 }
