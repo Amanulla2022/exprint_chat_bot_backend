@@ -10,6 +10,7 @@ const faqService = new FAQService();
 export default class FAQAgent extends BaseAgent {
   async execute(state) {
     const result = await faqService.generate(state);
+    console.dir(result, { depth: null });
 
     state.rag = {
       context: result.context,

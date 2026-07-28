@@ -107,10 +107,10 @@ const ACTION_CONFIG = {
     variant: "primary",
   },
 
-  COLLECT_ADDONS: {
+SELECT_ADDONS: {
     icon: PlusCircle,
     variant: "secondary",
-  },
+},
 
   COLLECT_QUANTITY: {
     icon: Package,
@@ -134,6 +134,11 @@ const ACTION_CONFIG = {
 
   ASK_DELIVERY_DATE: {
     icon: ArrowRight,
+    variant: "secondary",
+  },
+
+  EDIT_ORDER: {
+    icon: Pencil,
     variant: "secondary",
   },
 };

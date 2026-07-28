@@ -228,6 +228,16 @@ export default class SalesConversationService {
 
       /*
        * ===============================================
+       * Addons
+       * ===============================================
+       */
+
+      case DecisionTypes.SELECT_ADDONS:
+        message = "Would you like to add any addons, finishing options??";
+        break;
+
+      /*
+       * ===============================================
        * Review
        * ===============================================
        */

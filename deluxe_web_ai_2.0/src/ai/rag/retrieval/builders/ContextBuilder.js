@@ -1,82 +1,8 @@
-// export default class ContextBuilder {
-//   constructor(options = {}) {
-//     this.maxContextLength = options.maxContextLength ?? 12000;
-//   }
-
-//   build(documents = []) {
-//     if (!Array.isArray(documents) || documents.length === 0) {
-//       return "";
-//     }
-
-//     const uniqueDocuments = this.removeDuplicates(documents)
-//       .filter((document) => document.metadata?.isActive !== false)
-//       .sort(this.sortByScore);
-
-//     const sections = [];
-
-//     let currentLength = 0;
-
-//     for (const document of uniqueDocuments) {
-//       const section = this.formatDocument(document);
-
-//       if (currentLength + section.length > this.maxContextLength) {
-//         break;
-//       }
-
-//       sections.push(section);
-//       currentLength += section.length;
-//     }
-
-//     return sections.join("\n\n------------------------------\n\n");
-//   }
-
-//   removeDuplicates(documents) {
-//     const seen = new Set();
-
-//     return documents.filter((document) => {
-//       const id = document.metadata?.id ?? document.pageContent;
-
-//       if (seen.has(id)) {
-//         return false;
-//       }
-
-//       seen.add(id);
-
-//       return true;
-//     });
-//   }
-
-//   sortByScore(a, b) {
-//     const scoreA = a.metadata?.score ?? 0;
-//     const scoreB = b.metadata?.score ?? 0;
-
-//     return scoreB - scoreA;
-//   }
-
-//   formatDocument(document) {
-//     const metadata = document.metadata ?? {};
-
-//     return `
-// Title:
-// ${metadata.title ?? metadata.file ?? "N/A"}
-
-// Category:
-// ${metadata.category ?? "N/A"}
-
-// Source:
-// ${metadata.source ?? "N/A"}
-
-// Content:
-// ${document.pageContent}
-// `.trim();
-//   }
-// }
-
-// new updated builder
-
 export default class ContextBuilder {
   constructor(options = {}) {
-    this.maxContextLength = options.maxContextLength ?? 12000;
+    this.maxContextLength = options.maxContextLength ?? 2000;
+    this.maxDocuments = options.maxDocuments ?? 3;
+    this.maxDocumentLength = options.maxDocumentLength ?? 500;
   }
 
   build(documents = []) {
@@ -86,10 +12,10 @@ export default class ContextBuilder {
 
     const uniqueDocuments = this.removeDuplicates(documents)
       .filter((document) => document.metadata?.isActive !== false)
-      .sort(this.sortByScore);
+      .sort(this.sortByScore)
+      .slice(0, this.maxDocuments);
 
     const sections = [];
-
     let currentLength = 0;
 
     for (const document of uniqueDocuments) {
@@ -133,44 +59,41 @@ export default class ContextBuilder {
   formatDocument(document) {
     const metadata = document.metadata ?? {};
 
-    return [
-      `Product: ${metadata.product ?? "N/A"}`,
+    const content = document.pageContent
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, this.maxDocumentLength);
 
-      `Main Category: ${metadata.mainCategory ?? "N/A"}`,
+    const lines = [];
 
-      `Sub Category: ${metadata.subCategory ?? "N/A"}`,
+    if (metadata.product) {
+      lines.push(`Product: ${metadata.product}`);
+    }
 
-      metadata.businessTypes?.length
-        ? `Business Types: ${metadata.businessTypes.join(", ")}`
-        : "",
+    if (metadata.mainCategory) {
+      lines.push(`Category: ${metadata.mainCategory}`);
+    }
 
-      metadata.industries?.length
-        ? `Industries: ${metadata.industries.join(", ")}`
-        : "",
+    if (metadata.subCategory) {
+      lines.push(`Sub Category: ${metadata.subCategory}`);
+    }
 
-      metadata.useCases?.length
-        ? `Use Cases: ${metadata.useCases.join(", ")}`
-        : "",
+    if (metadata.relatedProducts?.length) {
+      lines.push(`Related Products: ${metadata.relatedProducts.join(", ")}`);
+    }
 
-      metadata.customerGoals?.length
-        ? `Customer Goals: ${metadata.customerGoals.join(", ")}`
-        : "",
+    if (metadata.frequentlyBoughtWith?.length) {
+      lines.push(
+        `Frequently Bought With: ${metadata.frequentlyBoughtWith.join(", ")}`,
+      );
+    }
 
-      metadata.relatedProducts?.length
-        ? `Related Products: ${metadata.relatedProducts.join(", ")}`
-        : "",
+    if (metadata.keywords?.length) {
+      lines.push(`Keywords: ${metadata.keywords.join(", ")}`);
+    }
 
-      metadata.frequentlyBoughtWith?.length
-        ? `Frequently Bought With: ${metadata.frequentlyBoughtWith.join(", ")}`
-        : "",
+    lines.push(`Description: ${content}`);
 
-      metadata.keywords?.length
-        ? `Keywords: ${metadata.keywords.join(", ")}`
-        : "",
-
-      `Description: ${document.pageContent}`,
-    ]
-      .filter(Boolean)
-      .join("\n");
+    return lines.join("\n");
   }
 }

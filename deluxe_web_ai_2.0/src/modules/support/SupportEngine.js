@@ -1,7 +1,7 @@
 import LLMService from "../../ai/llm/LLMService.js";
 import RAGPipeline from "../../ai/rag//retrieval/RagPipeline.js";
 
-import SupportPrompt  from "../../ai/llm/prompts/SupportPrompt.js";
+import SupportPrompt from "../../ai/llm/prompts/SupportPrompt.js";
 
 const llmService = new LLMService();
 const ragPipeline = new RAGPipeline();
@@ -11,6 +11,9 @@ export default class SupportEngine {
     const retrieval = await ragPipeline.retrieve({
       query: state.userMessage,
       conversation: state,
+      options: {
+        topK: 2,
+      },
     });
 
     const schema = {
@@ -47,6 +50,9 @@ export default class SupportEngine {
       systemPrompt: prompt,
       userMessage: state.userMessage,
     });
+
+    console.log("RAW LLM RESPONSE");
+    console.dir(response, { depth: null });
 
     return {
       context: retrieval.context,

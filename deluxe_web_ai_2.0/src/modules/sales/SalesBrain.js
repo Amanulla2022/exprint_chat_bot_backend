@@ -39,11 +39,11 @@ export default class SalesBrain {
     this.userMessage = state.userMessage ?? "";
 
     try {
-      console.log("===== INCOMING STATE =====");
-      console.dir(state, { depth: null });
+      // console.log("===== INCOMING STATE =====");
+      // console.dir(state, { depth: null });
 
-      console.log("LIVE REQUIREMENT");
-      console.dir(state.liveRequirement, { depth: null });
+      // console.log("LIVE REQUIREMENT");
+      // console.dir(state.liveRequirement, { depth: null });
 
       /*
        * =====================================================
@@ -56,15 +56,15 @@ export default class SalesBrain {
 
         requirement = this.applyAction(requirement, state.action);
 
-        console.log("===== AFTER APPLY ACTION =====");
+        // console.log("===== AFTER APPLY ACTION =====");
 
-        console.dir(orderManager.getCurrentItem(requirement), {
-          depth: null,
-        });
+        // console.dir(orderManager.getCurrentItem(requirement), {
+        //   depth: null,
+        // });
 
-        console.dir(orderManager.getCurrentItem(requirement)?.selection, {
-          depth: null,
-        });
+        // console.dir(orderManager.getCurrentItem(requirement)?.selection, {
+        //   depth: null,
+        // });
 
         // console.log("\nWorkflow After Action:");
         // console.dir(orderManager.getCurrentItem(requirement)?.workflow, {
@@ -117,6 +117,9 @@ export default class SalesBrain {
 
       const decision = conversationDecisionService.decide(requirement);
 
+      console.log("DECISION");
+      console.dir(decision, { depth: null });
+
       // console.log("STEP 5 - Decision");
       // console.dir(decision, { depth: null });
       /*
@@ -154,26 +157,26 @@ export default class SalesBrain {
         nextStep: decision.nextStep,
       };
     } catch (error) {
-      // console.error("\n========================================");
-      // console.error("SALES BRAIN ERROR");
-      // console.error("========================================");
+      console.error("\n========================================");
+      console.error("SALES BRAIN ERROR");
+      console.error("========================================");
 
-      // console.error("Message:");
-      // console.error(error.message);
+      console.error("Message:");
+      console.error(error.message);
 
-      // console.error("\nStack:");
-      // console.error(error.stack);
+      console.error("\nStack:");
+      console.error(error.stack);
 
-      // console.error("\nRequirement At Crash:");
-      // console.dir(requirement, { depth: null });
+      console.error("\nRequirement At Crash:");
+      console.dir(requirement, { depth: null });
 
-      // console.error("\nIncoming Action:");
-      // console.dir(state.action, { depth: null });
+      console.error("\nIncoming Action:");
+      console.dir(state.action, { depth: null });
 
-      // console.error("\nIncoming Message:");
-      // console.log(this.userMessage);
+      console.error("\nIncoming Message:");
+      console.log(this.userMessage);
 
-      // console.error("========================================\n");
+      console.error("========================================\n");
 
       return responseBuilder.build({
         workflow: "SALES",
@@ -196,6 +199,32 @@ export default class SalesBrain {
 
   applyAction(requirement = {}, action = {}) {
     if (!action?.id) {
+      return requirement;
+    }
+
+    /*
+     * =====================================================
+     * Edit Menu Selection
+     * =====================================================
+     * User clicked a field from the Edit Order menu.
+     * Don't update anything yet.
+     * Just remember which step they want to edit.
+     */
+
+    console.log("=================================");
+    console.log("APPLY ACTION");
+    console.log(action);
+
+    if (action.payload?.edit) {
+      console.log("EDIT ACTION");
+
+      requirement.editing = {
+        active: true,
+        step: action.id,
+      };
+
+      console.log(requirement.editing);
+
       return requirement;
     }
 
@@ -289,6 +318,22 @@ export default class SalesBrain {
 
       /*
        * =====================================================
+       * Edit Order
+       * =====================================================
+       * User clicked "Edit Order" from Review.
+       * Open the edit menu.
+       */
+
+      case DecisionTypes.EDIT_ORDER:
+        requirement.editing = {
+          active: true,
+          step: null,
+        };
+
+        return requirement;
+
+      /*
+       * =====================================================
        * Confirmation
        * =====================================================
        */
@@ -339,7 +384,11 @@ export default class SalesBrain {
 
       requirements: [],
 
-      addons: [],
+      addons: {
+        completed: false,
+        items: [],
+        notes: null,
+      },
 
       workflow: {
         quantity: null,
@@ -373,9 +422,11 @@ export default class SalesBrain {
       return requirement;
     }
 
-    return orderManager.updateCurrentItem(requirement, {
+    const updated = orderManager.updateCurrentItem(requirement, {
       selection,
     });
+
+    return this.exitEditMode(updated);
   }
 
   applyFieldAction(requirement = {}, action = {}) {
@@ -387,12 +438,14 @@ export default class SalesBrain {
 
     const currentItem = orderManager.getCurrentItem(requirement);
 
-    return orderManager.updateCurrentItem(requirement, {
+    const updated = orderManager.updateCurrentItem(requirement, {
       productData: {
         ...(currentItem?.productData ?? {}),
         [fieldId]: value,
       },
     });
+
+    return this.exitEditMode(updated);
   }
 
   applyRequirementAction(requirement = {}, action = {}) {
@@ -423,9 +476,11 @@ export default class SalesBrain {
       requirements.push(requirementValue);
     }
 
-    return orderManager.updateCurrentItem(requirement, {
+    const updated = orderManager.updateCurrentItem(requirement, {
       requirements,
     });
+
+    return this.exitEditMode(updated);
   }
 
   applyAddonAction(requirement = {}, action = {}) {
@@ -453,15 +508,21 @@ export default class SalesBrain {
       return requirement;
     }
 
-    const addons = [...(currentItem.addons ?? [])];
+    const addons = [...(currentItem.addons.items ?? [])];
 
     if (!addons.some((item) => item.id === addon.id)) {
       addons.push(addon);
     }
 
-    return orderManager.updateCurrentItem(requirement, {
-      addons,
+    const updated = orderManager.updateCurrentItem(requirement, {
+      addons: {
+        ...currentItem.addons,
+        completed: true,
+        items: addons,
+      },
     });
+
+    return this.exitEditMode(updated);
   }
 
   applyQuantityAction(requirement = {}, action = {}) {
@@ -471,9 +532,11 @@ export default class SalesBrain {
       return requirement;
     }
 
-    return orderManager.updateWorkflow(requirement, {
+    const updated = orderManager.updateWorkflow(requirement, {
       quantity,
     });
+
+    return this.exitEditMode(updated);
   }
 
   applyArtworkAction(requirement = {}, action = {}) {
@@ -483,12 +546,14 @@ export default class SalesBrain {
       return requirement;
     }
 
-    return orderManager.updateWorkflow(requirement, {
+    const updated = orderManager.updateWorkflow(requirement, {
       artwork: {
         status: artwork.status,
         reference: artwork.reference ?? null,
       },
     });
+
+    return this.exitEditMode(updated);
   }
 
   applyDeliveryAction(requirement = {}, action = {}) {
@@ -498,25 +563,32 @@ export default class SalesBrain {
       return requirement;
     }
 
+    let updated;
+
     switch (action.id) {
       case DecisionTypes.SELECT_DELIVERY_METHOD:
-        return orderManager.updateDelivery(requirement, {
+        updated = orderManager.updateDelivery(requirement, {
           method: value,
         });
+        break;
 
       case DecisionTypes.ASK_DELIVERY_ADDRESS:
-        return orderManager.updateDelivery(requirement, {
+        updated = orderManager.updateDelivery(requirement, {
           address: value,
         });
+        break;
 
       case DecisionTypes.ASK_DELIVERY_DATE:
-        return orderManager.updateDelivery(requirement, {
+        updated = orderManager.updateDelivery(requirement, {
           requiredDate: value,
         });
+        break;
 
       default:
         return requirement;
     }
+
+    return this.exitEditMode(updated);
   }
 
   /*
@@ -627,7 +699,7 @@ export default class SalesBrain {
       return updates;
     }
 
-    const merged = [...(currentItem.addons ?? [])];
+    const merged = [...(currentItem.addons.items ?? [])];
 
     for (const addon of extracted.addons) {
       if (!merged.some((item) => item.id === addon.id)) {
@@ -635,7 +707,11 @@ export default class SalesBrain {
       }
     }
 
-    updates.addons = merged;
+    updates.addons = {
+      ...(currentItem.addons ?? {}),
+      completed: true,
+      items: merged,
+    };
 
     return updates;
   }
@@ -786,12 +862,6 @@ export default class SalesBrain {
 
   /*
    * =====================================================
-   * Decision Handler
-   * =====================================================
-   */
-
-  /*
-   * =====================================================
    * Conversation Decisions
    * =====================================================
    */
@@ -818,6 +888,11 @@ export default class SalesBrain {
 
       case DecisionTypes.ASK_DELIVERY_DATE:
 
+      case DecisionTypes.SELECT_ADDONS:
+
+      case DecisionTypes.EDIT_ORDER:
+        return true;
+
       case DecisionTypes.COMPLETE_ORDER:
         return true;
 
@@ -840,12 +915,15 @@ export default class SalesBrain {
     switch (decision.type) {
       /*
        * =====================================================
-       * Review
+       * Review & Edit
        * =====================================================
        */
 
       case DecisionTypes.REVIEW_ORDER:
         return this.buildReviewResponse(requirement, decision);
+
+      case DecisionTypes.EDIT_ORDER:
+        return this.buildConversationResponse(requirement, decision);
 
       /*
        * =====================================================
@@ -870,12 +948,6 @@ export default class SalesBrain {
         return responseBuilder.error(`Unknown decision type: ${decision.type}`);
     }
   }
-
-  /*
-   * =====================================================
-   * Review Response
-   * =====================================================
-   */
 
   /*
    * =====================================================
@@ -950,7 +1022,7 @@ export default class SalesBrain {
             label: "Confirm Order",
           },
           {
-            id: DecisionTypes.CANCEL_ORDER,
+            id: DecisionTypes.EDIT_ORDER,
             label: "Edit Order",
           },
         ],
@@ -1139,10 +1211,33 @@ export default class SalesBrain {
       extra,
     );
 
+    const currentItem = orderManager.getCurrentItem(requirement);
+
+    let productContext = null;
+    let recommendationContext = null;
+
+    if (currentItem?.product?.id) {
+      const product = catalogService.getProduct(currentItem.product.id);
+
+      if (product) {
+        productContext = catalogService.getProductContext(
+          product,
+          currentItem.selection?.id,
+        );
+
+        recommendationContext =
+          catalogService.getRecommendationContext(product);
+      }
+    }
+
     return this.buildResponse(response, requirement, {
       completed,
       workflow,
-      metadata,
+      metadata: {
+        ...metadata,
+        productContext,
+        recommendationContext,
+      },
     });
   }
 
@@ -1163,5 +1258,14 @@ export default class SalesBrain {
 
       sections: [],
     };
+  }
+
+  exitEditMode(requirement = {}) {
+    requirement.editing = {
+      active: false,
+      step: null,
+    };
+
+    return requirement;
   }
 }

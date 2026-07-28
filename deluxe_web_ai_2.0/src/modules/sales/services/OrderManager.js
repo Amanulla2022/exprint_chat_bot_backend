@@ -280,10 +280,17 @@ export default class OrderManager {
         ...(values.pricing ?? {}),
       },
 
-      addons:
-        values.addons !== undefined
-          ? [...values.addons]
-          : [...(current.addons ?? [])],
+      addons: {
+        completed:
+          values.addons?.completed ?? current.addons?.completed ?? false,
+
+        items:
+          values.addons?.items !== undefined
+            ? [...values.addons.items]
+            : [...(current.addons?.items ?? [])],
+
+        notes: values.addons?.notes ?? current.addons?.notes ?? null,
+      },
 
       notes:
         values.notes !== undefined

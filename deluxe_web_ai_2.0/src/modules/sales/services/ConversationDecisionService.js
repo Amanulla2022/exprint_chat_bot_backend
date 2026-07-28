@@ -270,6 +270,43 @@ export default class ConversationDecisionService {
         requirement,
       );
     }
+
+    /*
+     * =====================================================
+     * Edit Mode
+     * =====================================================
+     */
+
+    if (requirement.editing?.active) {
+      switch (requirement.editing.step) {
+        case DecisionTypes.SELECT_SELECTION:
+          return this.buildSelectionRecommendation(requirement, product);
+
+        case DecisionTypes.COLLECT_PRODUCT_FIELD:
+          return this.buildFieldDecision(product, item);
+
+        case DecisionTypes.COLLECT_REQUIREMENT:
+          return this.buildRequirementDecision(product, item);
+
+        case DecisionTypes.COLLECT_QUANTITY:
+          return this.buildQuantityDecision(product, item);
+
+        case DecisionTypes.COLLECT_ARTWORK:
+          return this.buildArtworkDecision(product);
+
+        case DecisionTypes.SELECT_DELIVERY_METHOD:
+          return this.buildDeliveryMethodDecision();
+
+        case DecisionTypes.ASK_DELIVERY_ADDRESS:
+          return this.buildDeliveryAddressDecision();
+
+        case DecisionTypes.ASK_DELIVERY_DATE:
+          return this.buildDeliveryDateDecision();
+
+        default:
+          return this.buildEditDecision(requirement);
+      }
+    }
     /*
      * =====================================================
      * Quantity
@@ -402,8 +439,7 @@ export default class ConversationDecisionService {
 
         payload: {
           fieldId: field.id,
-
-          value: option.value ?? option.name,
+          value: option.id ?? option.value ?? option.name ?? option.label,
         },
       })),
     });
@@ -464,16 +500,28 @@ export default class ConversationDecisionService {
    */
 
   buildAddonDecision(product = {}, item = {}) {
+    const addons = catalogService.getAddons(product);
+
     return this.createDecision({
-      type: DecisionTypes.COLLECT_ADDONS,
+      type: DecisionTypes.SELECT_ADDONS,
 
       context: {
-        action: DecisionTypes.COLLECT_ADDONS,
+        action: DecisionTypes.SELECT_ADDONS,
 
         ...this.buildProductContext(product, item),
 
-        addons: catalogService.getAddons(product),
+        addons,
       },
+
+      actions: (addons.options ?? []).map((addon) => ({
+        id: DecisionTypes.SELECT_ADDONS,
+
+        label: addon.name,
+
+        payload: {
+          addonId: addon.id,
+        },
+      })),
     });
   }
 
@@ -652,6 +700,84 @@ export default class ConversationDecisionService {
 
           payload: {
             confirmed: false,
+          },
+        },
+      ],
+    });
+  }
+
+  /*
+   *======================================================
+   *Edit Order
+   *======================================================
+   */
+
+  buildEditDecision(requirement = {}) {
+    const item = requirement.items?.[requirement.currentItem] ?? {};
+
+    return this.createDecision({
+      type: DecisionTypes.EDIT_ORDER,
+
+      context: {
+        action: DecisionTypes.EDIT_ORDER,
+        item,
+      },
+
+      actions: [
+        {
+          id: DecisionTypes.SELECT_SELECTION,
+          label: "Business Card Type",
+          payload: {
+            edit: true,
+          },
+        },
+        {
+          id: DecisionTypes.COLLECT_PRODUCT_FIELD,
+          label: "Product Details",
+          payload: {
+            edit: true,
+          },
+        },
+        {
+          id: DecisionTypes.COLLECT_REQUIREMENT,
+          label: "Requirements",
+          payload: {
+            edit: true,
+          },
+        },
+        {
+          id: DecisionTypes.COLLECT_QUANTITY,
+          label: "Quantity",
+          payload: {
+            edit: true,
+          },
+        },
+        {
+          id: DecisionTypes.COLLECT_ARTWORK,
+          label: "Artwork",
+          payload: {
+            edit: true,
+          },
+        },
+        {
+          id: DecisionTypes.SELECT_DELIVERY_METHOD,
+          label: "Delivery Method",
+          payload: {
+            edit: true,
+          },
+        },
+        {
+          id: DecisionTypes.ASK_DELIVERY_ADDRESS,
+          label: "Delivery Address",
+          payload: {
+            edit: true,
+          },
+        },
+        {
+          id: DecisionTypes.ASK_DELIVERY_DATE,
+          label: "Delivery Date",
+          payload: {
+            edit: true,
           },
         },
       ],

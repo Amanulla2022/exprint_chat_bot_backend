@@ -23,6 +23,8 @@ const DecisionTypes = Object.freeze({
 
   COLLECT_REQUIREMENT: "COLLECT_REQUIREMENT",
 
+  SELECT_ADDONS: "SELECT_ADDONS",
+
   /*
    * =====================================================
    * Workflow
@@ -41,9 +43,17 @@ const DecisionTypes = Object.freeze({
 
   /*
    * =====================================================
-   * Review & Confirmation
+   * Edit Order
    * =====================================================
    */
+
+  EDIT_ORDER: "EDIT_ORDER",
+  /*
+   * =====================================================
+   * Review & Confirmation
+   * =====================================================
+   *
+   * */
 
   REVIEW_ORDER: "REVIEW_ORDER",
 

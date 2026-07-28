@@ -299,18 +299,21 @@ export default class SalesCatalogService {
    * =====================================================
    */
 
-  getProductFields(product = {}) {
-    return product.fields ?? [];
+  getProductFields(product = {}, item = {}) {
+    const selection = this.getSelectionOption(product, item.selection?.id);
+
+    return selection?.fields ?? product.fields ?? [];
   }
 
-  getProductField(product = {}, fieldId = "") {
+  getProductField(product = {}, item = {}, fieldId = "") {
     if (!fieldId) {
       return null;
     }
 
     return (
-      this.getProductFields(product).find((field) => field.id === fieldId) ??
-      null
+      this.getProductFields(product, item).find(
+        (field) => field.id === fieldId,
+      ) ?? null
     );
   }
 
@@ -324,7 +327,7 @@ export default class SalesCatalogService {
 
   getCurrentField(product = {}, item = {}) {
     return (
-      this.getProductFields(product).find(
+      this.getProductFields(product, item).find(
         (field) =>
           field.required !== false && item.productData?.[field.id] == null,
       ) ?? null
@@ -449,33 +452,38 @@ export default class SalesCatalogService {
    * =====================================================
    */
 
-  getSelectionContext(product = {}) {
+  getSelectionContext(product = {}, selectedId = null) {
     const recommended = this.getRecommendedSelection(product);
 
     return {
-      selection: this.getSelection(product),
+      configuration: this.getSelection(product),
+
+      selected: selectedId
+        ? this.getSelectionOption(product, selectedId)
+        : null,
 
       recommended,
 
-      alternatives: this.getAlternativeSelections(product, recommended?.id),
+      alternatives: this.getAlternativeSelections(
+        product,
+        selectedId ?? recommended?.id,
+      ),
     };
   }
-
   /*
    * =====================================================
    * Product Context
    * =====================================================
    */
-
-  getProductContext(product = {}) {
+  getProductContext(product = {}, selectedId = null, item = {}) {
     return {
       product,
 
       workflow: this.getProductWorkflow(product),
 
-      selection: this.getSelectionContext(product),
+      selection: this.getSelectionContext(product, selectedId),
 
-      fields: this.getProductFields(product),
+      fields: this.getProductFields(product, item),
 
       requirements: this.getRequirements(product),
 
@@ -579,7 +587,8 @@ export default class SalesCatalogService {
     }
 
     return (
-      this.getAddons(product).find((addon) => addon.id === addonId) ?? null
+      this.getAddons(product).options?.find((addon) => addon.id === addonId) ??
+      null
     );
   }
 
@@ -736,11 +745,15 @@ export default class SalesCatalogService {
       case "addons": {
         const addons = this.getAddons(product);
 
-        if (!addons.length) {
+        if (
+          !addons?.enabled ||
+          !Array.isArray(addons.options) ||
+          addons.options.length === 0
+        ) {
           return true;
         }
 
-        return !!item.addonsCompleted;
+        return item.addons?.completed === true;
       }
 
       default:

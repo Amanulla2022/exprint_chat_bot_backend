@@ -20,6 +20,18 @@ const PROMPTS = [
     prompt: "I want to order self ink stamps",
   },
   {
+    icon: Package,
+    title: "Order Pop Up Display Stands",
+    description: "Start a Pop Up Display Stands order",
+    prompt: "I want to order Pop Up Display Stands",
+  },
+  // {
+  //   icon: Package,
+  //   title: "Order Business Cards",
+  //   description: "Start a business card order",
+  //   prompt: "I want to order business cards",
+  // },
+  {
     icon: FileText,
     title: "Request Quotation",
     description: "Get a quotation for printing",

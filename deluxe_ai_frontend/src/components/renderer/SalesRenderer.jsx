@@ -11,6 +11,7 @@ export default function SalesRenderer({
     <SalesCard
       message={message}
       requirement={data.liveRequirement}
+      decision={data.decision}
       actions={actions}
     />
   );

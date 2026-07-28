@@ -28,6 +28,13 @@ export default class LiveRequirementBuilder {
         requiredDate: null,
       },
 
+      //edit order
+
+      editing: {
+        active: false,
+        step: null,
+      },
+
       pricing: {
         currency: "AED",
 
@@ -58,64 +65,17 @@ export default class LiveRequirementBuilder {
 
   createItem(product = {}) {
     return {
-      /*
-       * =====================================================
-       * Product
-       * =====================================================
-       */
-
       product: {
         id: product.id ?? null,
         name: product.name ?? null,
         slug: product.slug ?? null,
       },
 
-      /*
-       * =====================================================
-       * Selection
-       * =====================================================
-       */
-
       selection: null,
-
-      /*
-       * =====================================================
-       * Dynamic Product Data
-       * Example:
-       * {
-       *   numberOfNames: 2,
-       *   width: 100,
-       *   height: 200
-       * }
-       * =====================================================
-       */
 
       productData: {},
 
-      /*
-       * =====================================================
-       * Product Requirements
-       * Example:
-       * [
-       *   {
-       *     id,
-       *     name,
-       *     required,
-       *     value,
-       *     status
-       *   }
-       * ]
-       * =====================================================
-       */
-
       requirements: [],
-
-      /*
-       * =====================================================
-       * Workflow
-       * Shared by every product
-       * =====================================================
-       */
 
       workflow: {
         quantity: null,
@@ -126,31 +86,19 @@ export default class LiveRequirementBuilder {
         },
       },
 
-      /*
-       * =====================================================
-       * Pricing
-       * =====================================================
-       */
-
       pricing: {
         currency: "AED",
-
         unitPrice: null,
-
         subtotal: 0,
-
         discount: 0,
-
         total: 0,
       },
 
-      /*
-       * =====================================================
-       * Optional
-       * =====================================================
-       */
-
-      addons: [],
+      addons: {
+        completed: false,
+        items: [],
+        notes: null,
+      },
 
       notes: [],
 

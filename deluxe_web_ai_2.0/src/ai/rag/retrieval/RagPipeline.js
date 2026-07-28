@@ -33,7 +33,7 @@ export default class RAGPipeline {
 
     // Semantic Retrieval (BM25 Disabled)
     const documents = await retriever.retrieve(enriched.enrichedQuery, {
-      k: options.topK ?? 5,
+      k: options.topK ?? 3,
       filter: filters,
     });
 

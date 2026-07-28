@@ -20,6 +20,12 @@ const QUICK_ACTIONS = [
     prompt: "I want to order self ink stamps",
   },
   {
+    icon: Package,
+    title: "Order Pop Up Display Stands",
+    description: "Start a Pop Up Display Stands order",
+    prompt: "I want to order Pop Up Display Stands",
+  },
+  {
     icon: FileText,
     title: "Request Quotation",
     description: "Get a quotation for printing",

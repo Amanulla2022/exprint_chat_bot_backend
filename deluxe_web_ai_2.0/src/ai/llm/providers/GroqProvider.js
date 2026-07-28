@@ -15,10 +15,17 @@ export default class GroqProvider extends BaseProvider {
 
       apiKey: process.env.LLAMA_RATE_LIMIT_ALTERNATE,
 
-      // model: options.model ?? process.env.GROQ_MODEL ?? "groq/compound",
+      // apiKey: process.env.LLAMA_API_KEY,
 
       model:
-        options.model ?? process.env.LLAMA_ALTERNATE_MODEL ?? "llama-3.1-8b-instant",
+      options.model ?? process.env.LLAMA_MODEL ?? "llama-3.3-70b-versatile",
+
+      // model: options.model ?? process.env.GROQ_MODEL ?? "groq/compound",
+
+      // model:
+      //   options.model ??
+      //   process.env.LLAMA_ALTERNATE_MODEL ??
+      //   "llama-3.1-8b-instant",
 
       temperature: options.temperature ?? 0,
 
@@ -34,7 +41,10 @@ export default class GroqProvider extends BaseProvider {
     }
 
     console.log("================================");
-    console.log("Using Model:", config.model);
+    console.log("Using Model :", config.model);
+    console.log("API Exists  :", !!config.apiKey);
+    console.log("API Length  :", config.apiKey?.length);
+    console.log("API Prefix  :", config.apiKey?.substring(0, 8));
     console.log("================================");
     return this.models.get(key);
   }
@@ -94,20 +104,11 @@ export default class GroqProvider extends BaseProvider {
     const schemaPrompt = `
 Return ONLY valid JSON.
 
-Structure:
+The JSON must follow this schema:
 
-{
-  "message": "string",
-  "interaction": "MESSAGE | BUTTONS",
-  "actions": [],
-  "sections": []
-}
+${JSON.stringify(schema, null, 2)}
 
-Rules:
-- Return JSON only.
-- No markdown.
-- No explanations.
-- message cannot be empty.
+Return only JSON.
 `;
 
     const finalSystemPrompt = `${systemPrompt}\n${schemaPrompt}`;

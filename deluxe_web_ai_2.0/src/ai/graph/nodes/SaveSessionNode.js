@@ -32,13 +32,13 @@ export default class SaveSessionNode {
      * =====================================================
      */
 
-    console.log("========== BEFORE MEMORY MERGE ==========");
+    // console.log("========== BEFORE MEMORY MERGE ==========");
 
-    console.log("state.liveRequirement");
-    console.dir(state.liveRequirement, { depth: null });
+    // console.log("state.liveRequirement");
+    // console.dir(state.liveRequirement, { depth: null });
 
-    console.log("state.order");
-    console.dir(state.order, { depth: null });
+    // console.log("state.order");
+    // console.dir(state.order, { depth: null });
 
     state.memory = memoryService.merge(state.memory, state);
 
@@ -48,9 +48,9 @@ export default class SaveSessionNode {
 
     state.memory = memoryService.merge(state.memory, state);
 
-    console.log("========== AFTER MEMORY MERGE ==========");
+    // console.log("========== AFTER MEMORY MERGE ==========");
 
-    console.dir(state.memory.liveRequirement, { depth: null });
+    // console.dir(state.memory.liveRequirement, { depth: null });
 
     /*
      * =====================================================
