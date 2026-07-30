@@ -25,6 +25,8 @@ const DecisionTypes = Object.freeze({
 
   SELECT_ADDONS: "SELECT_ADDONS",
 
+  SKIP_ADDONS: "SKIP_ADDONS",
+
   /*
    * =====================================================
    * Workflow

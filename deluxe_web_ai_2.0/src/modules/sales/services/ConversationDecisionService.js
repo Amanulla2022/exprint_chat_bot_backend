@@ -92,6 +92,17 @@ export default class ConversationDecisionService {
           payload: {
             productId: product.id,
             selectionId: option.id,
+
+            selection: {
+              id: option.id,
+              name: option.name,
+              badge: option.badge ?? null,
+              description: option.description ?? null,
+              image: option.image ?? null,
+              images: option.images ?? [],
+              startingPrice: option.startingPrice ?? null,
+              features: (option.features ?? []).slice(0, 4),
+            },
           },
         })),
       });
@@ -205,6 +216,17 @@ export default class ConversationDecisionService {
         payload: {
           productId: product.id,
           selectionId: option.id,
+
+          selection: {
+            id: option.id,
+            name: option.name,
+            badge: option.badge ?? null,
+            description: option.description ?? null,
+            image: option.image ?? null,
+            images: option.images ?? [],
+            startingPrice: option.startingPrice ?? null,
+            features: (option.features ?? []).slice(0, 4),
+          },
         },
       })),
     });
@@ -801,18 +823,19 @@ export default class ConversationDecisionService {
   }
 
   buildProductContext(product = {}, item = {}) {
+    const selection = item.selection?.id
+      ? catalogService.getSelectionOption(product, item.selection.id)
+      : null;
+
     return {
       product: {
         id: product.id,
         name: product.name,
+        image: selection?.image ?? product.image ?? null,
+        images: selection?.images ?? product.images ?? [],
       },
 
-      selection: item.selection
-        ? {
-            id: item.selection.id,
-            name: item.selection.name,
-          }
-        : null,
+      selection,
     };
   }
 }

@@ -54,6 +54,7 @@
           {
             "id": "standard",
             "name": "Standard Business Cards",
+            "image":"https://www.dlxprint.com/images/products/standard_business_cards.webp",
             "badge": "Best Seller",
             "startingPrice": 60,
             "description": "Affordable professional business cards for everyday networking.",
@@ -80,6 +81,7 @@
           {
             "id": "executive",
             "name": "Executive Business Cards",
+            "image":"https://www.dlxprint.com/images/print&marketing/laminated_business_cards_printing_dubai.webp",
             "badge": "Recommended",
             "startingPrice": 100,
             "description": "Premium executive cards with elegant finish.",
@@ -104,6 +106,7 @@
           {
             "id": "velvet",
             "name": "Velvet Business Cards",
+            "image":"https://www.dlxprint.com/images/print&marketing/velvet_business_cards_printing_dubai.webp",
             "badge": "Premium",
             "startingPrice": 180,
             "description": "Luxury soft-touch velvet laminated business cards.",
@@ -128,6 +131,7 @@
           {
             "id": "spot-uv",
             "name": "3D Spot UV Business Cards",
+            "image":"https://www.dlxprint.com/images/print&marketing/spot_uv_business_cards_printing_dubai.webp",
             "startingPrice": 320,
             "badge": "Luxury",
             "recommendationReason": "Ideal when you want important elements like your logo to stand out.",
@@ -151,6 +155,7 @@
           {
             "id": "foil",
             "name": "3D Foil Business Cards",
+            "image": "https://www.dlxprint.com/images/print&marketing/3d_gold_foil_business_cards_dubai.webp",
             "startingPrice": 395,
             "badge": "Luxury",
             "description": "Premium metallic foil finish."
@@ -158,6 +163,7 @@
           {
             "id": "royal",
             "name": "3D Spot UV & 3D Foil",
+            "image": "https://www.dlxprint.com/images/print&marketing/royal_business_card_printing_dubai.webp",
             "startingPrice": 570,
             "badge": "Signature",
             "recommendationReason": "Our most premium business card combining Spot UV, Foiling and Velvet finish for maximum impact.",
@@ -182,6 +188,7 @@
           {
             "id": "translucent-pack",
             "name": "Translucent Business Cards",
+            "image": "https://www.dlxprint.com/images/print&marketing/translucent_business_card_printing_10.webp",
             "startingPrice": 250,
             "badge": "Unique",
             "description": "Semi-transparent waterproof PVC business cards that create a modern and memorable first impression.",

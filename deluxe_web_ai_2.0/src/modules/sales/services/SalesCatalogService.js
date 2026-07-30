@@ -476,8 +476,23 @@ export default class SalesCatalogService {
    * =====================================================
    */
   getProductContext(product = {}, selectedId = null, item = {}) {
+    const selected = this.getSelectionOption(product, selectedId);
+
     return {
-      product,
+      product: {
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+
+        image: selected?.image ?? product.image ?? null,
+
+        images: selected?.images ?? product.images ?? [],
+
+        thumbnail: selected?.thumbnail ?? product.thumbnail ?? null,
+
+        shortDescription:
+          product.shortDescription ?? product.description ?? null,
+      },
 
       workflow: this.getProductWorkflow(product),
 
@@ -763,5 +778,62 @@ export default class SalesCatalogService {
 
   isWorkflowCompleted(product = {}, item = {}) {
     return this.getCurrentWorkflowStep(product, item) === null;
+  }
+
+  getRelatedProducts(product = {}) {
+    if (!Array.isArray(product.relatedProducts)) {
+      return [];
+    }
+
+    return product.relatedProducts
+      .map((id) => this.getProduct(id))
+      .filter(Boolean)
+      .map((product) => this.toProductSummary(product));
+  }
+
+  getSimilarProducts(product = {}) {
+    if (!Array.isArray(product.similarProducts)) {
+      return [];
+    }
+
+    return product.similarProducts
+      .map((id) => this.getProduct(id))
+      .filter(Boolean)
+      .map((product) => this.toProductSummary(product));
+  }
+
+  getFrequentlyBoughtTogether(product = {}) {
+    if (!Array.isArray(product.frequentlyBoughtWith)) {
+      return [];
+    }
+
+    return product.frequentlyBoughtWith
+      .map((id) => this.getProduct(id))
+      .filter(Boolean)
+      .map((product) => this.toProductSummary(product));
+  }
+
+  toProductSummary(product = {}) {
+    const recommendation = this.getRecommendedSelection(product);
+
+    return {
+      id: product.id,
+
+      name: product.name,
+
+      slug: product.slug,
+
+      image: recommendation?.image ?? product.image ?? null,
+
+      thumbnail: recommendation?.thumbnail ?? product.thumbnail ?? null,
+
+      badge: recommendation?.badge ?? product.badge ?? null,
+
+      shortDescription: product.shortDescription ?? product.description ?? null,
+
+      pricing: this.getPricing(product),
+
+      featured: product.featured ?? false,
+    };
   }
 }

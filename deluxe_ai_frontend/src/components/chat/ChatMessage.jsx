@@ -49,7 +49,7 @@ export default function ChatMessage({ message }) {
             <Bot size={18} />
           </div>
 
-          <div className="max-w-[85%]">
+          <div className="w-full max-w-5xl">
             <div className="mb-2 text-xs font-medium text-slate-400">
               Deluxe AI
             </div>

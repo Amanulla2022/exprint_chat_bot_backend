@@ -70,6 +70,19 @@ export default function ResponseRenderer({ message }) {
         );
       }
 
+    case "sales":
+    case "SHOW_SELECTIONS":
+    case "SELECT_SELECTION":
+    case "COLLECT_PRODUCT_FIELD":
+    case "COLLECT_REQUIREMENT":
+    case "COLLECT_QUANTITY":
+    case "COLLECT_ARTWORK":
+    case "SELECT_DELIVERY_METHOD":
+    case "ASK_DELIVERY_ADDRESS":
+    case "ASK_DELIVERY_DATE":
+    case "REVIEW_ORDER":
+    case "CONFIRM_ORDER":
+    case "ORDER_COMPLETED":
       return (
         <SalesRenderer data={data} message={text} actions={rendererActions} />
       );

@@ -8,6 +8,7 @@ import {
   DollarSign,
   ClipboardList,
   MessageSquare,
+  Sparkles,
 } from "lucide-react";
 
 import ActionButton from "./ActionButton";
@@ -60,17 +61,15 @@ function InfoRow({ label, value }) {
 }
 
 function Section({ icon: Icon, title, children }) {
-  if (!children) return null;
-
   return (
-    <div className="overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-sm">
-      <div className="flex items-center gap-2 px-5 py-4 bg-slate-50 border-b">
-        <Icon className="w-5 h-5 text-blue-600" />
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex items-center gap-2 border-b bg-slate-50 px-4 py-3">
+        <Icon className="h-5 w-5 text-blue-600" />
 
-        <h3 className="font-semibold text-slate-800">{title}</h3>
+        <h3 className="text-base font-semibold text-slate-900">{title}</h3>
       </div>
 
-      <div className="p-5">{children}</div>
+      <div className="p-4">{children}</div>
     </div>
   );
 }
@@ -83,57 +82,65 @@ function Section({ icon: Icon, title, children }) {
 
 export default function SalesCard({
   message = "",
-  requirement = {},
+  metadata = {},
   actions = [],
 }) {
   /*
    * =====================================================
-   * Current Order
+   * Backend Context
    * =====================================================
    */
 
-  const item = requirement?.items?.[requirement?.currentItem ?? 0] ?? {};
-
-  const product = item.product ?? {};
-
-  const selection = item.selection ?? {};
-
-  const productData = item.productData ?? {};
-
-  const requirements = item.requirements ?? [];
-
-  const workflow = item.workflow ?? {};
-
-  const customer = requirement.customer ?? {};
-
-  const delivery = requirement.delivery ?? {};
-
-  const pricing = item.pricing ?? requirement.pricing ?? {};
-
-  const isCollectingField = actions.some(
-    (action) => action.id === "COLLECT_PRODUCT_FIELD",
-  );
+  const {
+    product = {},
+    recommendation = {},
+    field = {},
+    requirement = {},
+    addons = {},
+    options = [],
+    order = {},
+  } = metadata;
 
   /*
    * =====================================================
-   * Product Information
+   * Product
    * =====================================================
    */
-  /*
-   * =====================================================
-   * Product Information
-   * =====================================================
-   */
+
+  const orderItem = order?.items?.[0] ?? {};
+
+  const productData = orderItem.productData ?? {};
+  const workflow = orderItem.workflow ?? {};
+  const addonsData = orderItem.addons ?? {};
+  const itemPricing = orderItem.pricing ?? {};
+  const selection = orderItem.selection ?? metadata.selection ?? {};
 
   const selectionFeatures = selection?.features ?? [];
-
   const productFeatures = product?.features ?? [];
+  const availableAddons = addons?.options ?? [];
+  const selectedAddons = addonsData?.items ?? [];
 
-  const availableAddons = product?.addons?.options ?? [];
+  const displayProduct = selection?.id
+    ? selection
+    : recommendation?.id
+      ? recommendation
+      : product;
 
-  const selectedAddons = Array.isArray(item?.addons?.items)
-    ? item.addons.items
-    : [];
+  const productImage =
+    displayProduct?.image ||
+    displayProduct?.images?.[0] ||
+    product?.image ||
+    product?.images?.[0] ||
+    null;
+
+  const features =
+    displayProduct?.features ??
+    recommendation?.features ??
+    product?.features ??
+    [];
+
+  const price =
+    displayProduct?.startingPrice ?? recommendation?.startingPrice ?? null;
 
   /*
    * =====================================================
@@ -141,45 +148,69 @@ export default function SalesCard({
    * =====================================================
    */
 
-  const hasProduct = !!product?.id;
-
-  const hasSelection = !!selection?.id;
-
-  const hasProductData = Object.keys(productData).length > 0;
-
-  const isReview = actions.some(
-    (action) => action.id === "CONFIRM_ORDER" || action.id === "EDIT_ORDER",
-  );
-
   /*
-   * Customer is viewing all variants
+   * =====================================================
+   * Conversation State
+   * =====================================================
    */
 
-  const isComparison =
-    !hasSelection && actions.some((action) => action.id === "SELECT_SELECTION");
+  const stage = metadata.stage ?? "";
 
-  /*
-   * AI has recommended one variant
-   */
+  const isRecommendation = stage === "RECOMMEND_SELECTION";
 
-  const isRecommendation = hasProduct && !hasSelection && !isComparison;
+  const isComparison = stage === "SELECT_SELECTION" && options.length > 0;
 
-  /*
-   * Customer selected one variant
-   * but hasn't started filling
-   * order information yet.
-   */
+  const isField =
+    stage === "COLLECT_PRODUCT_FIELD" || stage === "COLLECT_REQUIREMENT";
+
+  const isQuantity = stage === "COLLECT_QUANTITY";
+
+  const isAddons = stage === "SELECT_ADDONS";
+
+  const isArtwork = stage === "COLLECT_ARTWORK";
+
+  const isDelivery = stage === "SELECT_DELIVERY_METHOD";
+
+  const isAddress = stage === "ASK_DELIVERY_ADDRESS";
+
+  const isDate = stage === "ASK_DELIVERY_DATE";
+
+  const isReview = stage === "REVIEW_ORDER" || stage === "COMPLETE_ORDER";
+
+  const isCompleted = stage === "ORDER_COMPLETED";
+
+  const isEdit = stage === "EDIT_ORDER";
+
+  const isConfirmation = stage === "COMPLETE_ORDER";
 
   const isSelectedVariant =
-    hasSelection && !hasProductData && !isReview && !isCollectingField;
+    !!selection?.id &&
+    !isField &&
+    !isQuantity &&
+    !isAddons &&
+    !isArtwork &&
+    !isDelivery &&
+    !isAddress &&
+    !isDate &&
+    !isReview &&
+    !isCompleted;
 
-  /*
-   * Customer is now answering
-   * questions like quantity,
-   * artwork etc.
-   */
+  const isOrderCollection =
+    isField ||
+    isQuantity ||
+    isAddons ||
+    isArtwork ||
+    isDelivery ||
+    isAddress ||
+    isDate;
 
-  const isOrderCollection = hasSelection && hasProductData && !isReview;
+  console.log("========== SALES CARD ==========");
+  console.log("stage", stage);
+  console.log("metadata", metadata);
+  console.log("addons", addons);
+  console.log("availableAddons", availableAddons);
+  console.log("actions", actions);
+  console.log("isAddons", isAddons);
 
   /*
    * =====================================================
@@ -191,12 +222,17 @@ export default function SalesCard({
     if (!features.length) return null;
 
     return (
-      <div className="space-y-2">
+      <div className="grid gap-3">
         {features.map((feature) => (
-          <div key={feature} className="flex items-start gap-2">
-            <span className="mt-1 text-green-600">✓</span>
+          <div
+            key={feature}
+            className="flex items-start gap-3 rounded-xl bg-slate-50 p-3"
+          >
+            <div className="mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-green-600">
+              ✓
+            </div>
 
-            <span className="text-sm text-slate-700">{feature}</span>
+            <div className="text-sm leading-6 text-slate-700">{feature}</div>
           </div>
         ))}
       </div>
@@ -208,33 +244,42 @@ export default function SalesCard({
 
     return (
       <div className="grid gap-4 md:grid-cols-2">
-        {availableAddons.map((addon) => (
-          <div
-            key={addon.id}
-            className="rounded-xl border border-slate-200 p-4"
-          >
-            <div className="flex items-center justify-between">
-              <h4 className="font-semibold">{addon.name}</h4>
+        {availableAddons.map((addon) => {
+          const selected = selectedAddons.some((item) => item.id === addon.id);
 
-              {selectedAddons.some((a) => a.id === addon.id) && (
-                <span className="text-xs font-semibold text-blue-600">
-                  Selected
-                </span>
+          return (
+            <div
+              key={addon.id}
+              className={`rounded-2xl border p-5 transition ${
+                selected
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-slate-200 bg-white"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-slate-900">{addon.name}</h4>
+
+                {selected && (
+                  <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
+                    Selected
+                  </span>
+                )}
+              </div>
+
+              {addon.description && (
+                <p className="mt-3 text-sm leading-6 text-slate-600">
+                  {addon.description}
+                </p>
+              )}
+
+              {addon.price && (
+                <div className="mt-4 text-lg font-bold text-green-600">
+                  {addon.price.currency} {addon.price.amount}
+                </div>
               )}
             </div>
-
-            {addon.description && (
-              <p className="mt-2 text-sm text-slate-600">{addon.description}</p>
-            )}
-
-            {addon.price && (
-              <div className="mt-3 text-sm font-semibold text-green-600">
-                {addon.price.currency} {addon.price.amount}
-                {addon.price.unit && ` / ${addon.price.unit}`}
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
@@ -283,61 +328,140 @@ export default function SalesCard({
 
       {isRecommendation && (
         <>
-          <Section icon={Package} title="AI Recommendation">
-            <InfoRow label="Product" value={product.name} />
+          <Section icon={Sparkles} title="AI Recommendation">
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+              {/* Product Image */}
 
-            <div className="mt-5 rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-wide text-blue-600">
-                    ⭐ Recommended
-                  </div>
-
-                  <h3 className="mt-1 text-xl font-bold text-slate-800">
-                    {selection.name}
-                  </h3>
-
-                  {selection.badge && (
-                    <span className="mt-2 inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                      {selection.badge}
-                    </span>
-                  )}
-                </div>
-
-                {selection.startingPrice && (
-                  <div className="text-right">
-                    <div className="text-xs text-slate-500">Starting From</div>
-
-                    <div className="text-2xl font-bold text-green-600">
-                      {pricing.currency || "AED"} {selection.startingPrice}
-                    </div>
+              <div className="bg-slate-100">
+                {productImage ? (
+                  <img
+                    src={productImage}
+                    alt={displayProduct.name}
+                    className="h-56 w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-56 items-center justify-center">
+                    <Package className="h-12 w-12 text-slate-300" />
                   </div>
                 )}
               </div>
 
-              {selection.description && (
-                <p className="mt-5 leading-7 text-slate-600">
-                  {selection.description}
-                </p>
-              )}
+              {/* Product Details */}
+
+              <div className="p-4">
+                <div className="mb-3 flex flex-wrap gap-2">
+                  <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                    ⭐ AI Recommended
+                  </span>
+
+                  {displayProduct.badge && (
+                    <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                      {displayProduct.badge}
+                    </span>
+                  )}
+                </div>
+
+                <h2 className="text-xl font-bold text-slate-900">
+                  {displayProduct.name}
+                </h2>
+
+                {price && (
+                  <div className="mt-2 text-2xl font-bold text-green-600">
+                    AED {price}
+                  </div>
+                )}
+
+                {displayProduct.description && (
+                  <p className="mt-3 text-sm leading-6 text-slate-600">
+                    {displayProduct.description}
+                  </p>
+                )}
+
+                {recommendation.recommendationReason && (
+                  <div className="mt-4 rounded-lg bg-blue-50 p-3">
+                    <div className="text-sm font-semibold text-blue-700">
+                      💡 Why this recommendation
+                    </div>
+
+                    <p className="mt-2 text-sm leading-6 text-slate-700">
+                      {recommendation.recommendationReason}
+                    </p>
+                  </div>
+                )}
+
+                {features.length > 0 && (
+                  <div className="mt-5">
+                    <h4 className="mb-3 font-semibold text-slate-900">
+                      Key Features
+                    </h4>
+
+                    <div className="space-y-2">
+                      {features.map((feature) => (
+                        <div key={feature} className="flex items-start gap-3">
+                          <div className="mt-1 text-green-600">✓</div>
+
+                          <div className="text-sm text-slate-700">
+                            {feature}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </Section>
 
-          {selectionFeatures.length > 0 && (
-            <Section icon={ClipboardList} title="Why We Recommend This">
-              {renderFeatureList(selectionFeatures)}
-            </Section>
-          )}
-
-          {productFeatures.length > 0 && (
-            <Section icon={Package} title="General Features">
-              {renderFeatureList(productFeatures)}
-            </Section>
-          )}
-
           {availableAddons.length > 0 && (
             <Section icon={Package} title="Available Finishing Options">
-              {renderAddonList()}
+              <div className="space-y-3">
+                {availableAddons.map((addon) => (
+                  <div
+                    key={addon.id}
+                    className="rounded-xl border border-slate-200 p-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold">{addon.name}</h4>
+
+                      {selectedAddons.some((a) => a.id === addon.id) && (
+                        <span className="rounded-full bg-green-100 px-2 py-1 text-xs text-green-700">
+                          Selected
+                        </span>
+                      )}
+                    </div>
+
+                    {addon.description && (
+                      <p className="mt-2 text-sm text-slate-600">
+                        {addon.description}
+                      </p>
+                    )}
+
+                    {addon.price && (
+                      <div className="mt-2 text-sm font-semibold text-green-600">
+                        {addon.price.currency} {addon.price.amount}
+                        {addon.price.unit && ` / ${addon.price.unit}`}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {actions.length > 0 && (
+            <Section
+              icon={ClipboardList}
+              title="What would you like to do next?"
+            >
+              <div className="space-y-3">
+                {actions.map((action, index) => (
+                  <ActionButton
+                    key={`${action.id}-${index}`}
+                    action={action}
+                    metadata={metadata}
+                  />
+                ))}
+              </div>
             </Section>
           )}
         </>
@@ -349,89 +473,145 @@ export default function SalesCard({
 
       {isComparison && (
         <Section icon={Package} title={`Choose Your ${product.name}`}>
-          <div className="grid gap-4">
-            {actions.map((action, index) => (
-              <div
-                key={index}
-                className="rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-blue-300 hover:shadow-md"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold">{action.label}</h3>
+          <div className="space-y-5">
+            {options.map((option) => {
+              const action = actions.find(
+                (a) => a.value === option.id || a.label === option.name,
+              );
 
-                    <div className="mt-2 text-sm text-slate-500">
-                      Premium printing option
+              return (
+                <div
+                  key={option.id}
+                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-blue-400 hover:shadow-md"
+                >
+                  {/* Product Image */}
+
+                  <div className="bg-slate-100">
+                    {option.image ? (
+                      <img
+                        src={option.image}
+                        alt={option.name}
+                        className="h-52 w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-52 items-center justify-center">
+                        <Package className="h-14 w-14 text-slate-300" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Content */}
+
+                  <div className="p-4">
+                    {/* Badge */}
+
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      {option.badge && (
+                        <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                          {option.badge}
+                        </span>
+                      )}
+
+                      {recommendation?.id === option.id && (
+                        <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                          AI Recommended
+                        </span>
+                      )}
                     </div>
+
+                    {/* Title */}
+
+                    <h3 className="text-xl font-bold text-slate-900">
+                      {option.name}
+                    </h3>
+
+                    {/* Price */}
+
+                    {option.startingPrice && (
+                      <div className="mt-2 text-2xl font-bold text-green-600">
+                        AED {option.startingPrice}
+                      </div>
+                    )}
+
+                    {/* Description */}
+
+                    {option.description && (
+                      <p className="mt-3 text-sm leading-6 text-slate-600">
+                        {option.description}
+                      </p>
+                    )}
+
+                    {/* Features */}
+
+                    {option.features?.length > 0 && (
+                      <div className="mt-5 space-y-2">
+                        {option.features.slice(0, 4).map((feature) => (
+                          <div key={feature} className="flex items-start gap-3">
+                            <div className="mt-1 text-green-600">✓</div>
+
+                            <div className="text-sm text-slate-700">
+                              {feature}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Button */}
+
+                    {action && (
+                      <div className="mt-6">
+                        <ActionButton
+                          action={action}
+                          metadata={metadata}
+                          className="w-full"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                <div className="mt-5">
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      ✓ Premium Quality
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      ✓ High Resolution Printing
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      ✓ Fast Turnaround
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <ActionButton action={action} requirement={requirement} />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Section>
       )}
-
       {/* ===========================================
           SELECTED VARIANT
       =========================================== */}
-
       {isSelectedVariant && (
-        <>
-          <Section icon={Package} title="Selected Product">
-            <InfoRow label="Product" value={product.name} />
-
-            <InfoRow label="Selection" value={selection.name} />
-
-            {selection.badge && (
-              <InfoRow label="Category" value={selection.badge} />
-            )}
-
-            {selection.startingPrice && (
-              <InfoRow
-                label="Starting Price"
-                value={`${pricing.currency || "AED"} ${selection.startingPrice}`}
-              />
-            )}
-
-            {selection.description && (
-              <div className="mt-5 rounded-xl bg-slate-50 p-4 text-sm leading-7 text-slate-600">
-                {selection.description}
-              </div>
-            )}
-          </Section>
-
-
-          {selectionFeatures.length > 0 && (
-            <Section icon={ClipboardList} title={`${selection.name} Features`}>
-              {renderFeatureList(selectionFeatures)}
-            </Section>
+        <Section icon={Package} title="Selected Product">
+          {productImage && (
+            <img
+              src={productImage}
+              alt={displayProduct.name}
+              className="mb-5 aspect-[16/9] w-full rounded-xl object-cover"
+            />
           )}
 
-          {availableAddons.length > 0 && (
-            <Section icon={Package} title="Available Finishing Options">
-              {renderAddonList()}
-            </Section>
+          <h2 className="text-2xl font-bold">{displayProduct.name}</h2>
+
+          {displayProduct.badge && (
+            <div className="mt-2 inline-flex rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-700">
+              {displayProduct.badge}
+            </div>
           )}
-        </>
+
+          {price && (
+            <div className="mt-4 text-3xl font-bold text-green-600">
+              AED {price}
+            </div>
+          )}
+
+          {displayProduct.description && (
+            <p className="mt-5 leading-7 text-slate-600">
+              {displayProduct.description}
+            </p>
+          )}
+
+          {features.length > 0 && (
+            <div className="mt-6">{renderFeatureList(features)}</div>
+          )}
+        </Section>
       )}
 
       {/* ===========================================
@@ -439,64 +619,213 @@ export default function SalesCard({
       =========================================== */}
 
       {isOrderCollection && (
-        <>
-          <Section icon={Package} title="Current Order">
-            <InfoRow label="Product" value={product.name} />
+        <Section icon={Package} title={displayProduct.name}>
+          {productImage && (
+            <img
+              src={productImage}
+              alt={displayProduct.name}
+              className="mb-5 aspect-[16/9] w-full rounded-xl object-cover"
+            />
+          )}
 
-            <InfoRow label="Selection" value={selection.name} />
+          {displayProduct.badge && (
+            <div className="mb-3 inline-flex rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
+              {displayProduct.badge}
+            </div>
+          )}
 
-            {selection.badge && (
-              <InfoRow label="Category" value={selection.badge} />
-            )}
+          {price && (
+            <div className="mb-4 text-3xl font-bold text-green-600">
+              AED {price}
+            </div>
+          )}
 
-            <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 p-4">
-              <div className="mb-4 text-sm font-semibold text-blue-700">
-                Order Progress
+          {displayProduct.description && (
+            <p className="leading-7 text-slate-600">
+              {displayProduct.description}
+            </p>
+          )}
+
+          {features.length > 0 && (
+            <div className="mt-6">{renderFeatureList(features)}</div>
+          )}
+
+          {/* ===========================================
+    CURRENT QUESTION
+=========================================== */}
+
+          {(field?.question || requirement?.description) && (
+            <div className="mt-8 rounded-2xl border border-blue-200 bg-blue-50 p-5">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-blue-600">
+                Current Step
               </div>
 
-              {Object.keys(productData).length > 0 &&
-                Object.entries(productData).map(([key, value]) => (
-                  <InfoRow key={key} label={formatLabel(key)} value={value} />
-                ))}
+              <h3 className="text-lg font-semibold text-slate-900">
+                {field?.label || requirement?.name}
+              </h3>
 
-              {workflow.quantity && (
-                <InfoRow label="Quantity" value={workflow.quantity} />
-              )}
+              <p className="mt-3 leading-7 text-slate-700">
+                {field?.question || requirement?.description}
+              </p>
 
-              {workflow.artwork && (
-                <InfoRow
-                  label="Artwork"
-                  value={
-                    workflow.artwork.status === "CUSTOMER_ARTWORK"
-                      ? "Customer Artwork"
-                      : "Need Design Service"
-                  }
-                />
-              )}
-
-              {selectedAddons.length > 0 && (
-                <div className="pt-5">
-                  <div className="mb-3 text-sm font-semibold text-slate-700">
-                    Selected Finishing
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {selectedAddons.map((addon) => (
-                      <span
-                        key={addon.id}
-                        className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700"
-                      >
-                        ✓ {addon.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+              {field?.description && (
+                <p className="mt-3 text-sm text-slate-500">
+                  {field.description}
+                </p>
               )}
             </div>
-          </Section>
-        </>
-      )}
+          )}
 
+          {/* ===========================================
+    ADDONS
+=========================================== */}
+
+          {isAddons && availableAddons.length > 0 && (
+            <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              {/* Header */}
+              <div className="border-b border-slate-200 bg-slate-50 px-6 py-5">
+                <h3 className="text-xl font-semibold text-slate-900">
+                  {addons.label || "Optional Finishing Options"}
+                </h3>
+
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Personalize your product with premium finishing options. These
+                  are completely optional and you can continue without selecting
+                  any.
+                </p>
+              </div>
+
+              {/* Cards */}
+              <div className="space-y-5">
+                {availableAddons.map((addon) => {
+                  const action = actions.find(
+                    (a) => a.payload?.addonId === addon.id,
+                  );
+
+                  const selected = selectedAddons.some(
+                    (item) => item.id === addon.id,
+                  );
+
+                  return (
+                    <div
+                      key={addon.id}
+                      className={`rounded-2xl border transition-all duration-200 ${
+                        selected
+                          ? "border-blue-500 bg-blue-50 shadow-md"
+                          : "border-slate-200 bg-white hover:border-blue-400 hover:shadow-md"
+                      }`}
+                    >
+                      <div className="flex h-full flex-col p-6">
+                        {/* Title */}
+                        <div>
+                          <h4 className="text-lg font-semibold text-slate-900">
+                            {addon.name}
+                          </h4>
+
+                          {selected && (
+                            <span className="mt-3 inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                              ✓ Selected
+                            </span>
+                          )}
+
+                          {/* Price */}
+                          {addon.price && (
+                            <div className="mt-5">
+                              <div className="text-3xl font-bold text-green-600">
+                                {addon.price.currency} {addon.price.amount}
+                              </div>
+
+                              {addon.price.unit && (
+                                <div className="text-sm text-slate-500">
+                                  {addon.price.unit}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Description */}
+                          {addon.description && (
+                            <p className="mt-5 text-sm leading-7 text-slate-600">
+                              {addon.description}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Button */}
+                        {action && (
+                          <div className="mt-6">
+                            <ActionButton
+                              action={action}
+                              metadata={metadata}
+                              className="w-full"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Continue Without Add-ons */}
+                <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50">
+                  <div className="flex h-full flex-col p-6">
+                    <div>
+                      <h4 className="text-lg font-semibold text-slate-900">
+                        Continue Without Add-ons
+                      </h4>
+
+                      <p className="mt-5 text-sm leading-7 text-slate-600">
+                        Finishing options are optional. You can continue with
+                        your order now and request additional finishing later if
+                        required.
+                      </p>
+                    </div>
+
+                    <div className="mt-6">
+                      <ActionButton
+                        action={{
+                          id: "SKIP_ADDONS",
+                          label: "Continue Without Add-ons",
+                          payload: {
+                            skip: true,
+                          },
+                        }}
+                        metadata={metadata}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ===========================================
+    AVAILABLE OPTIONS
+=========================================== */}
+
+          {field?.options?.length > 0 && (
+            <div className="mt-6">
+              <h4 className="mb-4 font-semibold text-slate-800">
+                Available Options
+              </h4>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {field.options.map((option) => (
+                  <div
+                    key={option.id}
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+                  >
+                    <div className="font-medium text-slate-800">
+                      {option.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </Section>
+      )}
       {/* ===========================================
           REVIEW
       =========================================== */}
@@ -504,31 +833,38 @@ export default function SalesCard({
       {isReview && (
         <>
           <Section icon={Package} title="Order Summary">
-            <InfoRow label="Product" value={product.name} />
-
-            <InfoRow label="Selection" value={selection.name} />
-
-            {selection.badge && (
-              <InfoRow label="Category" value={selection.badge} />
-            )}
-
-            {selection.startingPrice && (
-              <InfoRow
-                label="Starting Price"
-                value={`${pricing.currency || "AED"} ${selection.startingPrice}`}
+            {productImage && (
+              <img
+                src={productImage}
+                alt={displayProduct.name}
+                className="mb-6 aspect-[16/9] w-full rounded-xl object-cover"
               />
             )}
 
-            {selection.description && (
-              <div className="mt-5 rounded-xl bg-slate-50 p-4 text-sm leading-7 text-slate-600">
-                {selection.description}
+            <h2 className="text-2xl font-bold">{displayProduct.name}</h2>
+
+            {displayProduct.badge && (
+              <div className="mt-2 inline-flex rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
+                {displayProduct.badge}
               </div>
+            )}
+
+            {price && (
+              <div className="mt-4 text-3xl font-bold text-green-600">
+                AED {price}
+              </div>
+            )}
+
+            {displayProduct.description && (
+              <p className="mt-5 leading-7 text-slate-600">
+                {displayProduct.description}
+              </p>
             )}
           </Section>
 
-          {selectionFeatures.length > 0 && (
+          {features.length > 0 && (
             <Section icon={ClipboardList} title="Selected Product Features">
-              {renderFeatureList(selectionFeatures)}
+              {renderFeatureList(features)}
             </Section>
           )}
 
@@ -579,30 +915,42 @@ export default function SalesCard({
             </Section>
           )}
 
-          {Object.keys(delivery).length > 0 && (
+          {Object.keys(order.delivery ?? {}).length > 0 && (
             <Section icon={Truck} title="Delivery Details">
-              {Object.entries(delivery).map(([key, value]) => (
+              {Object.entries(order.delivery ?? {}).map(([key, value]) => (
                 <InfoRow key={key} label={formatLabel(key)} value={value} />
               ))}
             </Section>
           )}
 
-          {Object.keys(customer).length > 0 && (
+          {Object.keys(order.customer ?? {}).length > 0 && (
             <Section icon={User} title="Customer Details">
-              {Object.entries(customer).map(([key, value]) => (
+              {Object.entries(order.customer ?? {}).map(([key, value]) => (
                 <InfoRow key={key} label={formatLabel(key)} value={value} />
               ))}
             </Section>
           )}
 
-          {Object.keys(pricing).length > 0 && (
+          {Object.keys(order.pricing ?? {}).length > 0 && (
             <Section icon={DollarSign} title="Price Summary">
-              {Object.entries(pricing).map(([key, value]) => (
+              {Object.entries(order.pricing ?? {}).map(([key, value]) => (
                 <InfoRow key={key} label={formatLabel(key)} value={value} />
               ))}
             </Section>
           )}
         </>
+      )}
+
+      {isEdit && (
+        <Section icon={ClipboardList} title="Edit Your Order">
+          <p className="mb-5">Choose what you'd like to edit.</p>
+
+          <div className="grid gap-3">
+            {actions.map((action, index) => (
+              <ActionButton key={index} action={action} metadata={metadata} />
+            ))}
+          </div>
+        </Section>
       )}
 
       {/* ===========================================
@@ -612,26 +960,19 @@ export default function SalesCard({
       {actions.length > 0 &&
         !isRecommendation &&
         !isComparison &&
-        !isSelectedVariant && (
+        !isSelectedVariant &&
+        !isAddons &&
+        !isCompleted && (
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b bg-gradient-to-r from-slate-50 to-blue-50 px-5 py-4">
               <h3 className="text-lg font-semibold text-slate-800">
-                {isReview
-                  ? "Review & Confirm"
-                  : isComparison
-                    ? "Available Options"
-                    : "Next Step"}
+                {isReview ? "Review & Confirm" : "Next Step"}
               </h3>
 
               <p className="mt-1 text-sm text-slate-500">
-                {isReview && "Please review your order before submitting."}
-
-                {isComparison &&
-                  "Compare the available options and choose the one that best suits your business."}
-
-                {!isReview &&
-                  !isComparison &&
-                  "Select one of the available options below to continue."}
+                {isReview
+                  ? "Please review your order before submitting."
+                  : "Select one of the available options below to continue."}
               </p>
             </div>
 
@@ -641,7 +982,7 @@ export default function SalesCard({
                   <ActionButton
                     key={`${action.id}-${index}`}
                     action={action}
-                    requirement={requirement}
+                    metadata={metadata}
                   />
                 ))}
               </div>
@@ -653,7 +994,7 @@ export default function SalesCard({
           FOOTER
       =========================================== */}
 
-      {!isReview && actions.length === 0 && (
+      {!isReview && !isCompleted && actions.length === 0 && (
         <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="flex items-center gap-4 p-5">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
@@ -674,10 +1015,10 @@ export default function SalesCard({
       )}
 
       {/* ===========================================
-          REVIEW FOOTER
+          COMPLETED
       =========================================== */}
 
-      {isReview && (
+      {isCompleted && (
         <div className="rounded-2xl border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-6">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
@@ -686,19 +1027,14 @@ export default function SalesCard({
 
             <div>
               <h3 className="text-lg font-semibold text-green-900">
-                Review Your Order
+                Order Submitted Successfully
               </h3>
 
               <p className="mt-3 leading-7 text-green-700">
-                Please verify the information above carefully.
+                Thank you for your order.
                 <br />
-                If everything looks correct, click
-                <strong> Confirm Order </strong>
-                to submit your request.
-                <br />
-                If you need to make any changes, click
-                <strong> Edit Order </strong>
-                and I'll guide you through updating the order.
+                Our sales team will review your requirements, prepare the
+                quotation and contact you shortly.
               </p>
             </div>
           </div>

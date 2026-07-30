@@ -19,23 +19,11 @@ export default function ChatLauncher({ onClick }) {
       transition={{
         duration: 0.25,
       }}
-      className="
-        fixed
-        bottom-6
-        right-6
-        z-[9999]
-        group
-      "
+      className=" fixed bottom-6 right-6 z-[9999] group"
     >
       {/* Pulse Ring */}
       <span
-        className="
-          absolute
-          inset-0
-          rounded-full
-          bg-blue-500/20
-          animate-ping
-        "
+        className=" absolute inset-0 rounded-full bg-blue-500/20 animate-ping"
       />
 
       {/* Main Button */}

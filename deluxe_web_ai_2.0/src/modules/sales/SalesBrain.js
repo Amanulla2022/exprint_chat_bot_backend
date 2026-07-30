@@ -11,8 +11,11 @@ import PricingService from "./services/PricingService.js";
 import SalesCatalogService from "./services/SalesCatalogService.js";
 
 import DecisionTypes from "./helpers/DecisionTypes.js";
+import ConversationContextBuilder from "./services/ConversationcontextBuilder.js";
 
 const conversationService = new SalesConversationService();
+
+const contextBuilder = new ConversationContextBuilder();
 
 const extractor = new SalesExtractor();
 
@@ -278,6 +281,9 @@ export default class SalesBrain {
       case DecisionTypes.SELECT_ADDONS:
         return this.applyAddonAction(requirement, action);
 
+      case DecisionTypes.SKIP_ADDONS:
+        return this.skipAddonAction(requirement, action);
+
       /*
        * =====================================================
        * Quantity
@@ -519,6 +525,25 @@ export default class SalesBrain {
         ...currentItem.addons,
         completed: true,
         items: addons,
+      },
+    });
+
+    return this.exitEditMode(updated);
+  }
+
+  skipAddonAction(requirement = {}) {
+    const currentItem = orderManager.getCurrentItem(requirement);
+
+    if (!currentItem) {
+      return requirement;
+    }
+
+    const updated = orderManager.updateCurrentItem(requirement, {
+      addons: {
+        ...currentItem.addons,
+        completed: true,
+        items: [],
+        skipped: true,
       },
     });
 
@@ -1149,17 +1174,11 @@ export default class SalesBrain {
      * =====================================================
      */
 
-    const context = {
-      customerMessage: this.userMessage,
-
+    const context = contextBuilder.build(
       requirement,
-
-      order: requirement,
-
-      ...(decision.context ?? {}),
-
-      ...extra,
-    };
+      decision,
+      this.userMessage,
+    );
 
     /*
      * =====================================================
@@ -1213,30 +1232,74 @@ export default class SalesBrain {
 
     const currentItem = orderManager.getCurrentItem(requirement);
 
-    let productContext = null;
-    let recommendationContext = null;
+    let product = null;
+    let selection = null;
+    let recommendation = null;
+    let addons = null;
+    let options = [];
 
     if (currentItem?.product?.id) {
-      const product = catalogService.getProduct(currentItem.product.id);
+      product = catalogService.getProduct(currentItem.product.id);
 
       if (product) {
-        productContext = catalogService.getProductContext(
-          product,
-          currentItem.selection?.id,
-        );
+        if (currentItem.selection?.id) {
+          selection = catalogService.getSelectionOption(
+            product,
+            currentItem.selection.id,
+          );
+        }
 
-        recommendationContext =
-          catalogService.getRecommendationContext(product);
+        recommendation = catalogService.getRecommendedSelection(product);
+
+        addons = catalogService.getAddons(product);
+
+        options = catalogService.getSelectionOptions(product);
       }
     }
+
+    const relatedProducts = product
+      ? catalogService.getRelatedProducts(product)
+      : [];
+
+    const frequentlyBoughtTogether = product
+      ? catalogService.getFrequentlyBoughtTogether(product)
+      : [];
+
+    const similarProducts = product
+      ? catalogService.getSimilarProducts(product)
+      : [];
 
     return this.buildResponse(response, requirement, {
       completed,
       workflow,
       metadata: {
         ...metadata,
-        productContext,
-        recommendationContext,
+
+        // Conversation stage
+        stage: decision.type,
+
+        // Product data
+        product,
+        recommendation,
+        selection,
+
+        // Current workflow
+        field: decision.context?.field ?? null,
+        requirement: decision.context?.requirement ?? null,
+
+        // Catalog
+        addons,
+        options,
+
+        // Order
+        order: requirement,
+
+        // Suggestions
+        recommendations: {
+          relatedProducts,
+          frequentlyBoughtTogether,
+          similarProducts,
+        },
       },
     });
   }

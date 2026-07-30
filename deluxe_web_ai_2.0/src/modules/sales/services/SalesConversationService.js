@@ -30,7 +30,11 @@ export default class SalesConversationService {
       const systemPrompt = SalesConversationPrompt({
         context: promptContext,
       });
+      console.log("Conversation Context");
+      console.dir(context, { depth: null });
 
+      console.log("Decision");
+      console.dir(decision, { depth: null });
       const response = await this.llm.invokeStructured({
         systemPrompt,
 

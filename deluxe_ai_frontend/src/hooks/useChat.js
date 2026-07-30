@@ -61,6 +61,8 @@ export default function useChat() {
   /* -------------------------------------------------- */
 
   const addAssistantMessage = (response) => {
+    const payload = response.context ?? response.data ?? {};
+
     setMessages((prev) => [
       ...prev,
       createMessage({
@@ -70,11 +72,11 @@ export default function useChat() {
 
         message: response.message,
 
-        data: response.data,
+        data: payload,
+
+        metadata: payload,
 
         actions: response.actions ?? [],
-
-        metadata: response.metadata ?? {},
       }),
     ]);
   };
@@ -154,6 +156,7 @@ export default function useChat() {
     "COLLECT_PRODUCT_FIELD",
     "COLLECT_REQUIREMENT",
     "SELECT_ADDONS",
+    "SKIP_ADDONS",
     "COLLECT_QUANTITY",
     "EDIT_ORDER",
     "COLLECT_ARTWORK",

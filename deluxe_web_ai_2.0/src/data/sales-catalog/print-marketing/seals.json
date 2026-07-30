@@ -41,7 +41,7 @@
         "description": "Choose the type of self ink stamp that best suits your business.",
         "required": true,
         "allowRecommendation": true,
-        "recommended": "rectangle",
+        "recommended": "round",
         "options": [
           {
             "id": "rectangle",
@@ -59,7 +59,6 @@
               "Government paperwork"
             ],
             "sellingPoints": [
-              "Most popular",
               "Professional appearance",
               "Excellent readability"
             ],
@@ -96,6 +95,8 @@
               "Certification"
             ],
             "sellingPoints": [
+              "Most popular",
+              "Best Seller",
               "Professional",
               "Compact",
               "Premium impression"
