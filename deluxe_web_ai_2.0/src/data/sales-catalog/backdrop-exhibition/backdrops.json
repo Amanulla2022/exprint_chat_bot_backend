@@ -56,6 +56,7 @@
                     {
                         "id": "softcase-straight",
                         "name": "Pop Up Softcase - Straight",
+                        "images": "https://www.dlxprint.com/images/backdrops&exhibition/softcase_straight_popup_banner_printing_dubai.webp",
                         "badge": "Best Seller",
                         "description": "Straight exhibition backdrop supplied with a lightweight softcase trolley.",
                         "recommendationReason": "Our most popular exhibition display offering the perfect balance of quality, portability and affordability.",
@@ -154,6 +155,7 @@
                     {
                         "id": "softcase-curved",
                         "name": "Pop Up Softcase - Curved",
+                        "image": "https://www.dlxprint.com/images/backdrops&exhibition/softcase_curved_popup_banner_printing_dubai.webp",
                         "badge": "Recommended",
                         "description": "Curved exhibition backdrop that provides a more immersive presentation.",
                         "recommendationReason": "Ideal for brands wanting greater visual impact during exhibitions.",
@@ -230,6 +232,7 @@
                     {
                         "id": "hardcase-straight",
                         "name": "Pop Up Hardcase - Straight",
+                        "image": "https://www.dlxprint.com/images/backdrops&exhibition/hardcase_straight_popup_banner_printing.webp",
                         "badge": "Premium",
                         "description": "Straight exhibition backdrop supplied with a durable hardcase trolley for maximum protection during transport.",
                         "recommendationReason": "Recommended for businesses that frequently participate in exhibitions and transport displays between multiple venues.",
@@ -341,6 +344,7 @@
                     {
                         "id": "hardcase-curved",
                         "name": "Pop Up Hardcase - Curved",
+                        "image": "https://www.dlxprint.com/images/backdrops&exhibition/hardcase_curved_popup_banner_printing_dubai_1.webp",
                         "badge": "Luxury",
                         "description": "Premium curved exhibition backdrop supplied with a durable hardcase trolley.",
                         "recommendationReason": "Perfect for premium brands that require a luxury exhibition presentation.",
@@ -433,6 +437,7 @@
                     {
                         "id": "display-counter",
                         "name": "Pop Up Display Counter",
+                        "image": "https://www.dlxprint.com/images/backdrops&exhibition/popup_counter_display_dubai.webp",
                         "badge": "Accessory",
                         "description": "Portable magnetic exhibition counter with internal shelving and a fully branded front panel.",
                         "recommendationReason": "Perfect for completing your exhibition booth and providing brochure and product storage.",

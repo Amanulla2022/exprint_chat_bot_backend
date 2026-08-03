@@ -543,8 +543,20 @@ export default class OrderManager {
   }
 
   updateDraftOrder(draft = {}, order = {}) {
-    draft.customer = structuredClone(order.customer ?? {});
+    const incomingCustomer = order.customer ?? {};
 
+    const hasCustomerData =
+      incomingCustomer.name ||
+      incomingCustomer.phone ||
+      incomingCustomer.email ||
+      incomingCustomer.company;
+
+    draft.customer = hasCustomerData
+      ? {
+          ...(draft.customer ?? {}),
+          ...structuredClone(incomingCustomer),
+        }
+      : structuredClone(draft.customer ?? {});
     draft.delivery = structuredClone(order.delivery ?? {});
 
     draft.pricing = structuredClone(order.pricing ?? {});

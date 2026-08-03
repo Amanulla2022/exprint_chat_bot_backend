@@ -250,33 +250,52 @@ export default function SalesCard({
           return (
             <div
               key={addon.id}
-              className={`rounded-2xl border p-5 transition ${
+              className={`relative overflow-hidden rounded-2xl border p-5 transition ${
                 selected
                   ? "border-blue-500 bg-blue-50"
                   : "border-slate-200 bg-white"
               }`}
             >
-              <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-slate-900">{addon.name}</h4>
+              {/* Small Image */}
+              {addon.image && (
+                <img
+                  src={addon.image}
+                  alt={addon.name}
+                  className="absolute right-4 top-4 h-14 w-14 rounded-lg border border-slate-200 bg-white object-cover"
+                />
+              )}
 
-                {selected && (
-                  <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
-                    Selected
-                  </span>
+              <div className="pr-20">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-slate-900">{addon.name}</h4>
+
+                  {selected && (
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
+                      Selected
+                    </span>
+                  )}
+                </div>
+
+                {addon.price && (
+                  <div className="mt-4">
+                    <div className="text-3xl font-bold text-green-600">
+                      {addon.price.currency} {addon.price.amount}
+                    </div>
+
+                    {addon.price.unit && (
+                      <div className="text-sm text-slate-500">
+                        {addon.price.unit}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {addon.description && (
+                  <p className="mt-5 text-sm leading-6 text-slate-600">
+                    {addon.description}
+                  </p>
                 )}
               </div>
-
-              {addon.description && (
-                <p className="mt-3 text-sm leading-6 text-slate-600">
-                  {addon.description}
-                </p>
-              )}
-
-              {addon.price && (
-                <div className="mt-4 text-lg font-bold text-green-600">
-                  {addon.price.currency} {addon.price.amount}
-                </div>
-              )}
             </div>
           );
         })}
@@ -418,30 +437,50 @@ export default function SalesCard({
                 {availableAddons.map((addon) => (
                   <div
                     key={addon.id}
-                    className="rounded-xl border border-slate-200 p-4"
+                    className="relative rounded-xl border border-slate-200 p-4 bg-white"
                   >
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold">{addon.name}</h4>
+                    {addon.image && (
+                      <img
+                        src={addon.image}
+                        alt={addon.name}
+                        className="absolute top-4 right-4 h-16 w-16 rounded-lg object-cover border"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    )}
 
-                      {selectedAddons.some((a) => a.id === addon.id) && (
-                        <span className="rounded-full bg-green-100 px-2 py-1 text-xs text-green-700">
-                          Selected
-                        </span>
+                    <div className="pr-20">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold">{addon.name}</h4>
+
+                        {selectedAddons.some((a) => a.id === addon.id) && (
+                          <span className="rounded-full bg-green-100 px-2 py-1 text-xs text-green-700">
+                            Selected
+                          </span>
+                        )}
+                      </div>
+
+                      {addon.price && (
+                        <div className="mt-3">
+                          <div className="text-3xl font-bold text-green-600">
+                            {addon.price.currency} {addon.price.amount}
+                          </div>
+
+                          {addon.price.unit && (
+                            <div className="text-sm text-slate-500">
+                              {addon.price.unit}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {addon.description && (
+                        <p className="mt-4 text-sm text-slate-600">
+                          {addon.description}
+                        </p>
                       )}
                     </div>
-
-                    {addon.description && (
-                      <p className="mt-2 text-sm text-slate-600">
-                        {addon.description}
-                      </p>
-                    )}
-
-                    {addon.price && (
-                      <div className="mt-2 text-sm font-semibold text-green-600">
-                        {addon.price.currency} {addon.price.amount}
-                        {addon.price.unit && ` / ${addon.price.unit}`}
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
@@ -619,43 +658,13 @@ export default function SalesCard({
       =========================================== */}
 
       {isOrderCollection && (
-        <Section icon={Package} title={displayProduct.name}>
-          {productImage && (
-            <img
-              src={productImage}
-              alt={displayProduct.name}
-              className="mb-5 aspect-[16/9] w-full rounded-xl object-cover"
-            />
-          )}
-
-          {displayProduct.badge && (
-            <div className="mb-3 inline-flex rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
-              {displayProduct.badge}
-            </div>
-          )}
-
-          {price && (
-            <div className="mb-4 text-3xl font-bold text-green-600">
-              AED {price}
-            </div>
-          )}
-
-          {displayProduct.description && (
-            <p className="leading-7 text-slate-600">
-              {displayProduct.description}
-            </p>
-          )}
-
-          {features.length > 0 && (
-            <div className="mt-6">{renderFeatureList(features)}</div>
-          )}
-
+        <>
           {/* ===========================================
-    CURRENT QUESTION
-=========================================== */}
+        CURRENT QUESTION
+    =========================================== */}
 
           {(field?.question || requirement?.description) && (
-            <div className="mt-8 rounded-2xl border border-blue-200 bg-blue-50 p-5">
+            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
               <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-blue-600">
                 Current Step
               </div>
@@ -677,12 +686,11 @@ export default function SalesCard({
           )}
 
           {/* ===========================================
-    ADDONS
-=========================================== */}
+        ADDONS
+    =========================================== */}
 
           {isAddons && availableAddons.length > 0 && (
             <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              {/* Header */}
               <div className="border-b border-slate-200 bg-slate-50 px-6 py-5">
                 <h3 className="text-xl font-semibold text-slate-900">
                   {addons.label || "Optional Finishing Options"}
@@ -695,7 +703,6 @@ export default function SalesCard({
                 </p>
               </div>
 
-              {/* Cards */}
               <div className="space-y-5">
                 {availableAddons.map((addon) => {
                   const action = actions.find(
@@ -715,9 +722,16 @@ export default function SalesCard({
                           : "border-slate-200 bg-white hover:border-blue-400 hover:shadow-md"
                       }`}
                     >
-                      <div className="flex h-full flex-col p-6">
-                        {/* Title */}
-                        <div>
+                      <div className="relative flex h-full flex-col p-6">
+                        {addon.image && (
+                          <img
+                            src={addon.image}
+                            alt={addon.name}
+                            className="absolute top-6 right-6 h-20 w-20 rounded-lg border border-slate-200 bg-white object-cover"
+                          />
+                        )}
+
+                        <div className="pr-24">
                           <h4 className="text-lg font-semibold text-slate-900">
                             {addon.name}
                           </h4>
@@ -728,7 +742,6 @@ export default function SalesCard({
                             </span>
                           )}
 
-                          {/* Price */}
                           {addon.price && (
                             <div className="mt-5">
                               <div className="text-3xl font-bold text-green-600">
@@ -743,7 +756,6 @@ export default function SalesCard({
                             </div>
                           )}
 
-                          {/* Description */}
                           {addon.description && (
                             <p className="mt-5 text-sm leading-7 text-slate-600">
                               {addon.description}
@@ -751,7 +763,6 @@ export default function SalesCard({
                           )}
                         </div>
 
-                        {/* Button */}
                         {action && (
                           <div className="mt-6">
                             <ActionButton
@@ -766,29 +777,23 @@ export default function SalesCard({
                   );
                 })}
 
-                {/* Continue Without Add-ons */}
                 <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50">
                   <div className="flex h-full flex-col p-6">
-                    <div>
-                      <h4 className="text-lg font-semibold text-slate-900">
-                        Continue Without Add-ons
-                      </h4>
+                    <h4 className="text-lg font-semibold text-slate-900">
+                      Continue Without Add-ons
+                    </h4>
 
-                      <p className="mt-5 text-sm leading-7 text-slate-600">
-                        Finishing options are optional. You can continue with
-                        your order now and request additional finishing later if
-                        required.
-                      </p>
-                    </div>
+                    <p className="mt-5 text-sm leading-7 text-slate-600">
+                      Finishing options are optional. You can continue without
+                      selecting any finishing options.
+                    </p>
 
                     <div className="mt-6">
                       <ActionButton
                         action={{
                           id: "SKIP_ADDONS",
                           label: "Continue Without Add-ons",
-                          payload: {
-                            skip: true,
-                          },
+                          payload: { skip: true },
                         }}
                         metadata={metadata}
                         className="w-full"
@@ -801,8 +806,8 @@ export default function SalesCard({
           )}
 
           {/* ===========================================
-    AVAILABLE OPTIONS
-=========================================== */}
+        AVAILABLE OPTIONS
+    =========================================== */}
 
           {field?.options?.length > 0 && (
             <div className="mt-6">
@@ -824,7 +829,7 @@ export default function SalesCard({
               </div>
             </div>
           )}
-        </Section>
+        </>
       )}
       {/* ===========================================
           REVIEW
@@ -961,7 +966,6 @@ export default function SalesCard({
         !isRecommendation &&
         !isComparison &&
         !isSelectedVariant &&
-        !isAddons &&
         !isCompleted && (
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b bg-gradient-to-r from-slate-50 to-blue-50 px-5 py-4">

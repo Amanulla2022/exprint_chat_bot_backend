@@ -3,89 +3,36 @@ export default class ProductDetailsValidator {
     if (!result) {
       return {
         type: "product_details",
-
         summary: "Sorry, I couldn't find that product.",
-
-        product: null,
-
+        context: null,
         actions: [],
       };
     }
 
-    const metadata = result.metadata ?? {};
+    const { context } = result;
+    console.log(context);
 
     return {
       type: "product_details",
 
-      // AI generated overview
-      summary: result.overview,
+      summary: context.product.shortDescription ?? "",
 
-      product: {
-        name: metadata.product,
-
-        category: metadata.mainCategory,
-
-        subCategory: metadata.subCategory,
-
-        description: result.description,
-
-        // NEW
-        businessTypes: metadata.businessTypes ?? [],
-
-        industries: metadata.industries ?? [],
-
-        customerGoals: metadata.customerGoals ?? [],
-
-        applications: metadata.useCases ?? [],
-
-        specifications: metadata.specifications ?? {},
-
-        availableSizes: metadata.availableSizes ?? metadata.sizes ?? [],
-
-        materials: metadata.materials ?? [],
-
-        finishes: metadata.finishes ?? [],
-
-        minimumOrder: metadata.minimumOrder ?? null,
-
-        leadTime: metadata.leadTime ?? null,
-
-        artworkRequired: metadata.artworkRequired ?? false,
-
-        templates: metadata.templates ?? [],
-
-        faqs: metadata.faqs ?? [],
-
-        relatedProducts: metadata.relatedProducts ?? [],
-
-        frequentlyBoughtWith: metadata.frequentlyBoughtWith ?? [],
-      },
+      context,
 
       actions: [
         {
-          id: "COMPARE_PRODUCT",
-          label: "Compare",
-
-          payload: {
-            product: metadata.product,
-          },
-        },
-
-        {
           id: "START_ORDER",
-          label: "Order",
-
+          label: "Start Order",
           payload: {
-            product: metadata.product,
+            productId: context.product.id,
+            context,
           },
         },
-
         {
           id: "CONTACT_SALES",
           label: "Talk to Expert",
-
           payload: {
-            product: metadata.product,
+            productId: context.product.id,
           },
         },
       ],

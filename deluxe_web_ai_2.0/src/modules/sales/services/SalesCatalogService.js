@@ -836,4 +836,46 @@ export default class SalesCatalogService {
       featured: product.featured ?? false,
     };
   }
+
+  /*
+   * =====================================================
+   * Discovery
+   * =====================================================
+   */
+
+  discover(message = "") {
+    const text = message.trim().toLowerCase();
+
+    if (!text) {
+      return [];
+    }
+
+    // 1. Exact product match
+    const exact = this.findProducts(text);
+
+    if (exact.length) {
+      return exact;
+    }
+
+    // 2. Main category match
+    const mainCategory = this.getMainCategories().find((category) =>
+      text.includes(category.toLowerCase()),
+    );
+
+    if (mainCategory) {
+      return this.getProductsByMainCategory(mainCategory);
+    }
+
+    // 3. Sub category match
+    const subCategory = this.getSubCategories().find((category) =>
+      text.includes(category.toLowerCase()),
+    );
+
+    if (subCategory) {
+      return this.getProductsBySubCategory(subCategory);
+    }
+
+    // 4. Fallback keyword search
+    return this.search(text);
+  }
 }

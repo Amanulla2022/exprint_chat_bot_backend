@@ -7,7 +7,7 @@ const VALID_CAPABILITIES = new Set([
   "out_of_scope",
 
   // "recommendation",
-  // "discovery",
+  "discovery",
   // "comparison",
   "lead",
   "resume_workflow",

@@ -1,4 +1,6 @@
 const DecisionTypes = Object.freeze({
+  START_ORDER: "START_ORDER",
+
   /*
    * =====================================================
    * Product Selection

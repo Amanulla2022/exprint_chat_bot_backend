@@ -1,14 +1,15 @@
-import CatalogMapper from "../catalog/CatalogMapper.js";
+import SalesCatalogService from "../sales/services/SalesCatalogService.js";
 
-const catalogMapper = new CatalogMapper();
+const catalogService = new SalesCatalogService();
 
 export default class DiscoveryEngine {
   async generate(state) {
-    console.log("Query:", state.userMessage);
+    const query = state.userMessage ?? "";
 
-    const products = await catalogMapper.searchProducts(state.userMessage, 10);
+    console.log("========== DISCOVERY ==========");
+    console.log("Query:", query);
 
-    console.log(products);
+    const products = catalogService.discover(query);
 
     return {
       products,

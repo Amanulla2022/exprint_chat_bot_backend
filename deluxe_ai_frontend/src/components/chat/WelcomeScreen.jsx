@@ -1,179 +1,234 @@
 "use client";
 
-import { Sparkles, Package, FileText, ArrowRight } from "lucide-react";
-
+import { Sparkles, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { useChatContext } from "../../context/ChatContext";
 
-const QUICK_ACTIONS = [
-  {
-    icon: Package,
-    title: "Order Business Cards",
-    description: "Start a business card order",
-    prompt: "I want to order business cards",
-  },
-  {
-    icon: Package,
-    title: "Order Self Ink Stamps",
-    description: "Start a stamp order",
-    prompt: "I want to order self ink stamps",
-  },
-  {
-    icon: Package,
-    title: "Order Pop Up Display Stands",
-    description: "Start a Pop Up Display Stands order",
-    prompt: "I want to order Pop Up Display Stands",
-  },
-  {
-    icon: FileText,
-    title: "Request Quotation",
-    description: "Get a quotation for printing",
-    prompt: "Request quotation",
-  },
-];
+import {
+  FEATURED_PRODUCTS,
+  QUICK_ACTIONS,
+} from "../../components/quick-actions/FeaturedProducts";
 
 export default function WelcomeScreen() {
-  const { sendMessage } = useChatContext();
+  const { sendMessage, loading } = useChatContext();
 
   return (
-    <div className="mx-auto flex h-full max-w-xl flex-col justify-center px-4 py-8">
-      {/* Logo */}
+    <div className="mx-auto max-w-6xl px-6 py-10">
+      {/* ================= HEADER ================= */}
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.85 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="mx-auto"
-      >
-        <div
-          className="
-            mx-auto
-            flex
-            h-20
-            w-20
-            items-center
-            justify-center
-            rounded-3xl
-            bg-gradient-to-br
-            from-blue-600
-            to-indigo-600
-            text-white
-            shadow-xl
-          "
-        >
-          <Sparkles size={34} />
-        </div>
-      </motion.div>
-
-      {/* Heading */}
-
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
+        initial={{ opacity: 0, y: -15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="mt-7 text-center"
+        className="mb-12 text-center"
       >
-        <h1 className="text-3xl font-bold text-slate-900">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-100">
+          <Sparkles className="text-blue-600" size={36} />
+        </div>
+
+        <h1 className="mt-6 text-4xl font-bold text-slate-900">
           Deluxe AI Sales Assistant
         </h1>
 
-        <p className="mt-3 leading-7 text-slate-500">
-          I can recommend products, compare printing solutions, explain product
-          details, create quotations and help you place complete orders.
+        <p className="mt-3 text-lg text-slate-500">
+          Choose a product to start your printing order.
         </p>
       </motion.div>
 
-      {/* Quick Actions */}
+      {/* ================= FEATURED PRODUCTS ================= */}
+
+      {/* ================= FEATURED PRODUCTS ================= */}
 
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="mt-10 space-y-3"
+        transition={{ delay: 0.15 }}
+        className="mt-8"
       >
-        {QUICK_ACTIONS.map((item) => {
-          const Icon = item.icon;
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">
+              Featured Products
+            </h2>
 
-          return (
-            <button
-              key={item.title}
-              onClick={() => sendMessage(item.prompt)}
+            <p className="mt-1 text-sm text-slate-500">
+              Select a product to begin your order
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {FEATURED_PRODUCTS.map((product) => (
+            <motion.button
+              key={product.id}
+              whileHover={{
+                scale: 1.01,
+                y: -2,
+              }}
+              whileTap={{
+                scale: 0.98,
+              }}
+              disabled={loading}
+              onClick={() => sendMessage(product.prompt)}
               className="
-                group
-                flex
-                w-full
-                items-center
-                justify-between
+          group
+          flex
+          w-full
+          items-center
+          gap-4
 
-                rounded-2xl
+          rounded-2xl
 
-                border
-                border-slate-200
+          border
+          border-slate-200
 
-                bg-white
+          bg-white
 
-                p-4
+          p-3
 
-                text-left
+          text-left
 
-                shadow-sm
+          shadow-sm
 
-                transition-all
+          transition-all
 
-                hover:border-blue-300
-                hover:bg-blue-50
-                hover:shadow-lg
-              "
+          hover:border-blue-500
+          hover:shadow-lg
+        "
             >
-              <div className="flex items-center gap-4">
-                <div
-                  className="
-                    flex
-                    h-12
-                    w-12
-                    items-center
-                    justify-center
+              {/* Image */}
 
-                    rounded-2xl
-
-                    bg-blue-100
-                    text-blue-600
-                  "
-                >
-                  <Icon size={22} />
-                </div>
-
-                <div>
-                  <div className="font-semibold text-slate-900">
-                    {item.title}
-                  </div>
-
-                  <div className="text-sm text-slate-500">
-                    {item.description}
-                  </div>
-                </div>
+              <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                />
               </div>
 
-              <ArrowRight
-                size={18}
+              {/* Content */}
+
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-lg font-semibold text-slate-900">
+                  {product.name}
+                </h3>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Tap to start your order
+                </p>
+              </div>
+
+              {/* Arrow */}
+
+              <div
                 className="
-                  text-slate-400
-                  transition
-                  group-hover:translate-x-1
-                  group-hover:text-blue-600
-                "
-              />
-            </button>
-          );
-        })}
+            flex
+            h-10
+            w-10
+            items-center
+            justify-center
+
+            rounded-full
+
+            bg-slate-100
+
+            text-slate-500
+
+            transition-all
+
+            group-hover:bg-blue-600
+            group-hover:text-white
+          "
+              >
+                <ArrowRight size={18} />
+              </div>
+            </motion.button>
+          ))}
+        </div>
       </motion.div>
 
-      {/* Footer */}
+      {/* ================= QUICK ACTIONS ================= */}
 
-      <div className="mt-8 text-center text-xs text-slate-400">
-        Powered by AI • Recommendations • Orders • Quotations • Product
-        Knowledge
-      </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.25 }}
+        className="mt-14"
+      >
+        <h2 className="mb-6 text-2xl font-bold text-slate-900">
+          Quick Actions
+        </h2>
+
+        <div className="flex flex-wrap gap-4">
+          {QUICK_ACTIONS.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <motion.button
+                key={item.title}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                disabled={loading}
+                onClick={() => {
+                  if (item.link) {
+                    window.open(item.link, "_blank", "noopener,noreferrer");
+                  } else {
+                    sendMessage(item.prompt);
+                  }
+                }}
+                className="
+                  flex
+                  items-center
+                  gap-3
+
+                  rounded-full
+
+                  border
+                  border-slate-200
+
+                  bg-white
+
+                  px-6
+                  py-4
+
+                  font-medium
+
+                  text-slate-700
+
+                  shadow-sm
+
+                  transition-all
+
+                  hover:border-blue-500
+                  hover:bg-blue-600
+                  hover:text-white
+                  hover:shadow-lg
+                "
+              >
+                <Icon size={20} />
+
+                <span>{item.title}</span>
+
+                <ArrowRight size={16} />
+              </motion.button>
+            );
+          })}
+        </div>
+      </motion.div>
+
+      {/* ================= FOOTER ================= */}
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.35 }}
+        className="mt-16 text-center"
+      >
+        <p className="text-sm text-slate-400">
+          Or simply type your printing requirements below to start chatting with
+          the AI assistant.
+        </p>
+      </motion.div>
     </div>
   );
 }

@@ -233,6 +233,11 @@ export default class SalesBrain {
 
     switch (action.id) {
       /*
+       *Start Order from product details or discovery
+       */
+      case DecisionTypes.START_ORDER:
+        return this.applyStartOrderAction(requirement, action);
+      /*
        * =====================================================
        * Product
        * =====================================================
@@ -353,6 +358,18 @@ export default class SalesBrain {
       default:
         return requirement;
     }
+  }
+
+  applyStartOrderAction(requirement = {}, action = {}) {
+    const productId = action.payload?.productId;
+
+    if (!productId) {
+      return requirement;
+    }
+
+    return orderManager.addItem(requirement, {
+      id: productId,
+    });
   }
 
   applyProductAction(requirement = {}, action = {}) {

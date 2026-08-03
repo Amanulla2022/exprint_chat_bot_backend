@@ -8,7 +8,13 @@ const leadService = new LeadService();
 
 export default class LeadAgent extends BaseAgent {
   async execute(state) {
-    console.log("LeadAgent Executed");
+    console.log("========== LEAD AGENT ==========");
+
+    console.log("ORDER EXISTS:", !!state.order);
+    console.log("ORDER TYPE:", typeof state.order);
+
+    console.dir(state.order, { depth: null });
+    console.log("========== LEAD AGENT ==========");
 
     const result = await leadService.process(state);
 
@@ -31,6 +37,18 @@ export default class LeadAgent extends BaseAgent {
         ...(state.customer ?? {}),
         ...state.leadRequest.customer,
       };
+
+      if (state.order) {
+        console.log("Updating Runtime Order Customer");
+
+        state.order.customer = {
+          ...(state.order.customer ?? {}),
+          ...state.leadRequest.customer,
+        };
+
+        state.persistence.order.dirty = true;
+        state.persistence.order.updatedAt = new Date();
+      }
     }
 
     /*
@@ -48,7 +66,6 @@ export default class LeadAgent extends BaseAgent {
     /*
      * =====================================================
      * Completed
-     * Let WorkflowState clear the workflow.
      * =====================================================
      */
 

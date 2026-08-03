@@ -67,11 +67,23 @@ export default class LoadSessionNode {
      * =====================================================
      */
 
-    const order = await orderRepository.findActiveBySession(state.sessionId);
-
     const leadRequest = await leadRequestRepository.findActiveByConversationId(
       conversation._id,
     );
+
+    let order = await orderRepository.findActiveBySession(state.sessionId);
+
+    /*
+     * =====================================================
+     * Restore confirmed order during Lead workflow
+     * =====================================================
+     */
+
+    if (!order && conversation.workflow === "LEAD") {
+      console.log("No active order found. Restoring order by conversation.");
+
+      order = await orderRepository.findByConversationId(conversation._id);
+    }
 
     /*
      * =====================================================

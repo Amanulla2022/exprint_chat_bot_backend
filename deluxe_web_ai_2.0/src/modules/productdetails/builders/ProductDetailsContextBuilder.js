@@ -1,40 +1,40 @@
 export default class ProductDetailsContextBuilder {
-  build(product) {
-    if (!product) return "";
+  build(product = {}) {
+    const sections = [];
 
-    const metadata = product.metadata ?? {};
+    sections.push(`Product: ${product.name}`);
 
-    const sections = [
-      `Product: ${metadata.product}`,
-      `Category: ${metadata.mainCategory}/${metadata.subCategory}`,
-    ];
+    sections.push(`Category: ${product.mainCategory}/${product.subCategory}`);
 
-    if (metadata.description || product.content || product.pageContent) {
+    if (product.shortDescription || product.description) {
       sections.push(
-        `Description:\n${metadata.description ?? product.content ?? product.pageContent}`,
+        `Description:\n${product.shortDescription ?? product.description}`,
       );
     }
 
-    if (metadata.features?.length) {
-      sections.push(`Features:\n${metadata.features.join(", ")}`);
+    if (product.features?.length) {
+      sections.push(`Features:\n${product.features.join("\n")}`);
     }
 
-    if (metadata.specifications) {
-      const specs = Object.entries(metadata.specifications)
-        .map(([k, v]) => `${k}: ${v}`)
-        .join("\n");
-
-      sections.push(`Specifications:\n${specs}`);
+    if (product.fields?.length) {
+      sections.push(
+        `Fields:\n${product.fields.map((f) => f.label).join(", ")}`,
+      );
     }
 
-    if (metadata.materials?.length)
-      sections.push(`Materials: ${metadata.materials.join(", ")}`);
+    if (product.requirements?.length) {
+      sections.push(
+        `Requirements:\n${product.requirements.map((r) => r.name).join(", ")}`,
+      );
+    }
 
-    if (metadata.availableSizes?.length)
-      sections.push(`Sizes: ${metadata.availableSizes.join(", ")}`);
-
-    if (metadata.finishes?.length)
-      sections.push(`Finishes: ${metadata.finishes.join(", ")}`);
+    if (product.addons?.options?.length) {
+      sections.push(
+        `Available Addons:\n${product.addons.options
+          .map((a) => a.name)
+          .join(", ")}`,
+      );
+    }
 
     return sections.join("\n\n");
   }

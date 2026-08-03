@@ -2,10 +2,13 @@ import ConversationRepository from "../../../repositories/ConversationRepository
 import LeadRequestRepository from "../../../repositories/LeadRepository.js";
 import MemoryService from "../../../modules/memory/MemoryService.js";
 import OrderRepository from "../../../repositories/OrderRequestRepository.js";
+import TelegramService from "../../../modules/telegram/TelegramService.js";
 
 const conversationRepository = new ConversationRepository();
 const leadRequestRepository = new LeadRequestRepository();
 const orderRepository = new OrderRepository();
+
+const telegram = new TelegramService();
 
 const memoryService = new MemoryService();
 
@@ -32,14 +35,6 @@ export default class SaveSessionNode {
      * =====================================================
      */
 
-    // console.log("========== BEFORE MEMORY MERGE ==========");
-
-    // console.log("state.liveRequirement");
-    // console.dir(state.liveRequirement, { depth: null });
-
-    // console.log("state.order");
-    // console.dir(state.order, { depth: null });
-
     state.memory = memoryService.merge(state.memory, state);
 
     state.recommendation = state.memory.recommendation;
@@ -47,10 +42,6 @@ export default class SaveSessionNode {
     state.recommendationContext = state.memory.recommendationContext;
 
     state.memory = memoryService.merge(state.memory, state);
-
-    // console.log("========== AFTER MEMORY MERGE ==========");
-
-    // console.dir(state.memory.liveRequirement, { depth: null });
 
     /*
      * =====================================================
@@ -160,11 +151,35 @@ export default class SaveSessionNode {
       } else {
         state.leadRequest = await leadRequestRepository.create({
           ...state.leadRequest,
-
           sessionId: state.sessionId,
-
           conversationId: state.conversationId,
         });
+      }
+
+      // Copy customer into state
+      if (state.leadRequest.customer) {
+        state.customer = {
+          ...(state.customer ?? {}),
+          ...state.leadRequest.customer,
+        };
+
+        if (state.order) {
+          state.order.customer = {
+            ...(state.order.customer ?? {}),
+            ...state.leadRequest.customer,
+          };
+
+          state.persistence.order.dirty = true;
+        }
+      }
+
+      // Send Lead notification ONLY for non-order leads
+      if (
+        state.currentStep === "LEAD_COMPLETED" &&
+        state.leadRequest.status === "SUBMITTED" &&
+        state.leadRequest.type !== "ORDER_REQUEST"
+      ) {
+        await telegram.sendLead(state.leadRequest);
       }
 
       state.persistence.leadRequest.dirty = false;
@@ -189,15 +204,7 @@ export default class SaveSessionNode {
      * =====================================================
      */
 
-    console.log("========== ORDER BEFORE SAVE ==========");
-
-    console.dir(state.order, { depth: null });
-
     if (state.persistence?.order?.dirty && state.order) {
-      /*
-       * Order no longer stores conversational workflow state.
-       */
-
       state.order.updatedAt = new Date();
 
       state.order = await orderRepository.saveDraft(
@@ -214,18 +221,18 @@ export default class SaveSessionNode {
 
       state.orderContext = state.order;
 
+      // Send Order notification ONLY after customer has been collected
+      if (
+        state.currentStep === "LEAD_COMPLETED" &&
+        state.leadRequest?.status === "SUBMITTED" &&
+        state.leadRequest?.type === "ORDER_REQUEST"
+      ) {
+        await telegram.sendOrder(state.order);
+      }
+
       state.persistence.order.dirty = false;
     }
 
-    // const savedOrder = await orderRepository.saveDraft(
-    //   state.sessionId,
-    //   state.conversationId,
-    //   state.order,
-    // );
-
-    // state.order = savedOrder;
-
-    console.log("======================================\n");
     return state;
   }
 }

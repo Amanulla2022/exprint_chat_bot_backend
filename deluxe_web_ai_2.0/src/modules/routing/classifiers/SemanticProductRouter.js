@@ -5,7 +5,7 @@ import {
   SALES_PATTERNS,
   // COMPARISON_PATTERNS,
   DETAIL_PATTERNS,
-  // DISCOVERY_PATTERNS,
+  DISCOVERY_PATTERNS,
 } from "../utils/RoutingConstants.js";
 
 const resolver = new ProductResolver();
@@ -137,7 +137,7 @@ export default class SemanticProductRouter {
       properties: {
         capability: {
           type: "string",
-          enum: ["sales", "product_details"],
+          enum: ["sales", "product_details", "none"],
         },
         confidence: {
           type: "number",
@@ -160,27 +160,33 @@ Return ONLY valid JSON.
 Choose ONE capability.
 
 sales
-- buy
-- order
-- purchase
-- quantity
-- checkout
-- review order
-- modify order
-- confirm order
+- customer wants to buy a product
+- customer wants to order
+- customer wants quantity
+- customer wants checkout
 
 product_details
+- asks about material
 - price
-- specification
-- material
-- finish
 - size
-- features
+- specifications
 - printing options
+
+none
+- message is NOT about buying a product
+- message is about contacting sales
+- message is about talking to an expert
+- message is about support
+- greeting
+- anything unrelated to product purchase
 `,
 
       userMessage: message,
     });
+
+    if (result.capability === "none") {
+      return null;
+    }
 
     return {
       capability: result.capability,

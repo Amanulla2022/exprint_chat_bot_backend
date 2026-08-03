@@ -12,11 +12,11 @@ export default {
   //   workflow: "RECOMMENDATION",
   // },
 
-  // discovery: {
-  //   capability: "discovery",
-  //   node: "DiscoveryNode",
-  //   persistent: false,
-  // },
+  discovery: {
+    capability: "discovery",
+    node: "DiscoveryNode",
+    persistent: false,
+  },
 
   product_details: {
     capability: "product_details",

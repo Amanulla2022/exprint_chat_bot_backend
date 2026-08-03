@@ -2,8 +2,6 @@ export default class DiscoveryValidator {
   validate(result = {}) {
     const products = result.products ?? [];
 
-    console.log(products)
-
     return {
       summary:
         products.length > 0
@@ -13,25 +11,35 @@ export default class DiscoveryValidator {
       followUpQuestion:
         products.length > 0 ? "Select a product to view more details." : "",
 
-      products: products.map((item) => ({
-        product: item.product,
+      products: products.map((product) => ({
+        id: product.id,
 
-        mainCategory: item.mainCategory,
+        name: product.name,
 
-        subCategory: item.subCategory,
+        slug: product.slug,
 
-        description: item.description ?? "",
+        image: product.image,
 
-        relatedProducts: item.metadata?.relatedProducts ?? [],
+        thumbnail: product.thumbnail,
 
-        frequentlyBoughtWith: item.metadata?.frequentlyBoughtWith ?? [],
+        badge: product.badge,
+
+        shortDescription: product.shortDescription ?? product.description ?? "",
+
+        mainCategory: product.mainCategory,
+
+        subCategory: product.subCategory,
+
+        pricing: product.pricing,
+
+        featured: product.featured,
 
         actions: [
           {
             id: "SHOW_PRODUCT_DETAILS",
-            label: "View details",
+            label: "View Details",
             payload: {
-              product: item.product,
+              productId: product.id,
             },
           },
         ],

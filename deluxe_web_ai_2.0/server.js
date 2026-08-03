@@ -5,6 +5,10 @@ const result = dotenv.config();
 import express from "express";
 import cors from "cors";
 
+import TelegramService from "./src/modules/telegram/TelegramService.js";
+
+const telegram = new TelegramService();
+
 import vectorStore from "./src/ai/rag/VectorStore.js";
 import dbConnect from "./src/config/database.js";
 import chatRoutes from "./src/api/routes/chat.routes.js";

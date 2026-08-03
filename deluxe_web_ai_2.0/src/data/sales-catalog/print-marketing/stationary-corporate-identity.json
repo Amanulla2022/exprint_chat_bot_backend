@@ -5,6 +5,7 @@
     {
       "id": "business-cards",
       "name": "Business Cards",
+      "image": "https://www.dlxprint.com/images/digital-business-cards/standard_business_cards_printing_dubai.webp",
       "slug": "business-cards",
       "description": "Professional custom business cards available in a wide range of materials, finishes and premium printing options.",
       "aliases": [
@@ -49,13 +50,13 @@
         "label": "Business Card Type",
         "description": "Choose the business card style that best matches your brand.",
         "required": true,
-        "recommended": "standard",
+        "recommended": "Executive",
         "options": [
           {
             "id": "standard",
             "name": "Standard Business Cards",
-            "image":"https://www.dlxprint.com/images/products/standard_business_cards.webp",
-            "badge": "Best Seller",
+            "image": "https://www.dlxprint.com/images/products/standard_business_cards.webp",
+            "badge": "Budget Friendly",
             "startingPrice": 60,
             "description": "Affordable professional business cards for everyday networking.",
             "recommendationReason": "Our best-selling business card offering the best balance of quality, appearance and affordability for most businesses.",
@@ -81,8 +82,8 @@
           {
             "id": "executive",
             "name": "Executive Business Cards",
-            "image":"https://www.dlxprint.com/images/print&marketing/laminated_business_cards_printing_dubai.webp",
-            "badge": "Recommended",
+            "image": "https://www.dlxprint.com/images/print&marketing/laminated_business_cards_printing_dubai.webp",
+            "badge": "Best Seller",
             "startingPrice": 100,
             "description": "Premium executive cards with elegant finish.",
             "recommendationReason": "Recommended for professionals who want a more premium corporate image.",
@@ -106,7 +107,7 @@
           {
             "id": "velvet",
             "name": "Velvet Business Cards",
-            "image":"https://www.dlxprint.com/images/print&marketing/velvet_business_cards_printing_dubai.webp",
+            "image": "https://www.dlxprint.com/images/print&marketing/velvet_business_cards_printing_dubai.webp",
             "badge": "Premium",
             "startingPrice": 180,
             "description": "Luxury soft-touch velvet laminated business cards.",
@@ -131,7 +132,7 @@
           {
             "id": "spot-uv",
             "name": "3D Spot UV Business Cards",
-            "image":"https://www.dlxprint.com/images/print&marketing/spot_uv_business_cards_printing_dubai.webp",
+            "image": "https://www.dlxprint.com/images/print&marketing/spot_uv_business_cards_printing_dubai.webp",
             "startingPrice": 320,
             "badge": "Luxury",
             "recommendationReason": "Ideal when you want important elements like your logo to stand out.",
@@ -247,6 +248,7 @@
           {
             "id": "round-corners",
             "name": "Round Corners",
+            "image": "https://www.dlxprint.com/images/add-ons/finishing_round_corners_business_cards_dubai.webp",
             "description": "Rounded corner finishing.",
             "price": {
               "amount": 35,
@@ -257,11 +259,13 @@
           {
             "id": "foiling",
             "name": "Foiling",
+            "image": "https://www.dlxprint.com/images/add-ons/finishing_foil_business_cards_dubai.webp",
             "description": "Premium metallic foil finishing."
           },
           {
             "id": "colored-edge",
             "name": "Colored Edge",
+            "image": "https://www.dlxprint.com/images/print&marketing/colored_edge_business_cards_dubai.webp",
             "description": "Custom coloured edge finishing."
           }
         ]

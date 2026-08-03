@@ -30,7 +30,12 @@ export default class SalesNode {
     // console.log("===== RESULT LIVE REQUIREMENT =====");
     // console.dir(result.liveRequirement, { depth: null });
 
-    const order = orderManager.buildOrder(result.liveRequirement, state.order);
+    let order = orderManager.buildOrder(result.liveRequirement, state.order);
+
+    // Customer finished the order
+    if (result.completed) {
+      order = orderManager.confirmOrder(order);
+    }
 
     // console.log("===== BUILT ORDER =====");
     // console.dir(order, { depth: null });
