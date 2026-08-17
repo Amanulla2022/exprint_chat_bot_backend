@@ -3,7 +3,7 @@ import OrderModel from "../models/OrderRequest.js";
 export default class OrderRepository {
   /*
    * =====================================================
-   * Create
+   * CREATE
    * =====================================================
    */
 
@@ -13,7 +13,7 @@ export default class OrderRepository {
 
   /*
    * =====================================================
-   * Save
+   * SAVE
    * =====================================================
    */
 
@@ -29,7 +29,7 @@ export default class OrderRepository {
 
   /*
    * =====================================================
-   * Find By Id
+   * FIND BY ID
    * =====================================================
    */
 
@@ -43,7 +43,7 @@ export default class OrderRepository {
 
   /*
    * =====================================================
-   * Find By Order Number
+   * FIND BY ORDER NUMBER
    * =====================================================
    */
 
@@ -59,7 +59,7 @@ export default class OrderRepository {
 
   /*
    * =====================================================
-   * Active Order For Session
+   * ACTIVE ORDER FOR SESSION
    * =====================================================
    */
 
@@ -70,6 +70,7 @@ export default class OrderRepository {
 
     return OrderModel.findOne({
       sessionId,
+
       status: {
         $nin: ["CONFIRMED", "CANCELLED", "DELETED"],
       },
@@ -80,7 +81,7 @@ export default class OrderRepository {
 
   /*
    * =====================================================
-   * Conversation Order
+   * CONVERSATION ORDER
    * =====================================================
    */
 
@@ -98,7 +99,7 @@ export default class OrderRepository {
 
   /*
    * =====================================================
-   * Lead Order
+   * LEAD ORDER
    * =====================================================
    */
 
@@ -114,7 +115,7 @@ export default class OrderRepository {
 
   /*
    * =====================================================
-   * Order History
+   * ORDER HISTORY
    * =====================================================
    */
 
@@ -132,13 +133,14 @@ export default class OrderRepository {
 
   /*
    * =====================================================
-   * Pending Sales Orders
+   * PENDING SALES ORDERS
    * =====================================================
    */
 
   async findPendingOrders() {
     return OrderModel.find({
       status: "CONFIRMED",
+
       leadId: {
         $exists: true,
       },
@@ -149,7 +151,7 @@ export default class OrderRepository {
 
   /*
    * =====================================================
-   * Update
+   * UPDATE
    * =====================================================
    */
 
@@ -163,11 +165,13 @@ export default class OrderRepository {
       {
         $set: {
           ...updates,
+
           updatedAt: new Date(),
         },
       },
       {
         returnDocument: "after",
+
         runValidators: true,
       },
     );
@@ -175,7 +179,7 @@ export default class OrderRepository {
 
   /*
    * =====================================================
-   * Attach Lead
+   * ATTACH LEAD
    * =====================================================
    */
 
@@ -189,11 +193,13 @@ export default class OrderRepository {
       {
         $set: {
           leadId,
+
           updatedAt: new Date(),
         },
       },
       {
         returnDocument: "after",
+
         runValidators: true,
       },
     );
@@ -201,7 +207,7 @@ export default class OrderRepository {
 
   /*
    * =====================================================
-   * Update Customer
+   * UPDATE CUSTOMER
    * =====================================================
    */
 
@@ -215,6 +221,7 @@ export default class OrderRepository {
       {
         $set: {
           customer,
+
           updatedAt: new Date(),
         },
       },
@@ -227,7 +234,40 @@ export default class OrderRepository {
 
   /*
    * =====================================================
-   * Update Status
+   * ATTACH LEAD + CUSTOMER
+   * =====================================================
+   */
+
+  async attachLeadAndCustomer(orderId, leadId = null, customer = {}) {
+    if (!orderId) {
+      return null;
+    }
+
+    const updates = {
+      customer,
+
+      updatedAt: new Date(),
+    };
+
+    if (leadId) {
+      updates.leadId = leadId;
+    }
+
+    return OrderModel.findByIdAndUpdate(
+      orderId,
+      {
+        $set: updates,
+      },
+      {
+        returnDocument: "after",
+        runValidators: true,
+      },
+    );
+  }
+
+  /*
+   * =====================================================
+   * UPDATE STATUS
    * =====================================================
    */
 
@@ -241,11 +281,13 @@ export default class OrderRepository {
       {
         $set: {
           status,
+
           updatedAt: new Date(),
         },
       },
       {
         returnDocument: "after",
+
         runValidators: true,
       },
     );
@@ -253,7 +295,7 @@ export default class OrderRepository {
 
   /*
    * =====================================================
-   * Soft Delete
+   * SOFT DELETE
    * =====================================================
    */
 
@@ -267,11 +309,13 @@ export default class OrderRepository {
       {
         $set: {
           status: "DELETED",
+
           updatedAt: new Date(),
         },
       },
       {
         returnDocument: "after",
+
         runValidators: true,
       },
     );
@@ -279,21 +323,20 @@ export default class OrderRepository {
 
   /*
    * =====================================================
-   * Save Draft Order
+   * SAVE DRAFT ORDER
    * =====================================================
    */
 
   async saveDraft(sessionId, conversationId, order = {}) {
-    if (!order) {
+    if (!sessionId || !order) {
       return null;
     }
-    // console.log("========== INPUT ==========");
-    // console.dir(order, { depth: null });
 
     const update = {
       conversationId,
 
       status: order.status,
+
       confirmed: order.confirmed,
 
       customer: order.customer,
@@ -317,24 +360,25 @@ export default class OrderRepository {
       updatedAt: new Date(),
     };
 
-    // console.log("========== UPDATE ==========");
-    // console.dir(update, { depth: null });
-
     const doc = await OrderModel.findOneAndUpdate(
-      { sessionId },
+      {
+        sessionId,
+      },
       {
         $set: update,
-        $setOnInsert: { sessionId },
+
+        $setOnInsert: {
+          sessionId,
+        },
       },
       {
         upsert: true,
+
         returnDocument: "after",
+
         runValidators: true,
       },
     );
-
-    // console.log("========== RETURN ==========");
-    // console.dir(doc.toObject(), { depth: null });
 
     return doc;
   }

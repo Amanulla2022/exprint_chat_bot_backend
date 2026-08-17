@@ -12,33 +12,128 @@ export default function ChatInput() {
 
   const textareaRef = useRef(null);
 
+  /*
+   * =====================================================
+   * SUBMIT LOCK
+   * =====================================================
+   *
+   * `loading` is React state and updates asynchronously.
+   *
+   * `submittingRef` is synchronous and prevents the same
+   * message from being submitted more than once.
+   */
+
+  const submittingRef = useRef(false);
+
+  /*
+   * =====================================================
+   * AUTO RESIZE
+   * =====================================================
+   */
+
   useEffect(() => {
     if (!textareaRef.current) return;
 
     textareaRef.current.style.height = "0px";
+
     textareaRef.current.style.height =
       Math.min(textareaRef.current.scrollHeight, 160) + "px";
   }, [message]);
 
+  /*
+   * =====================================================
+   * SUBMIT
+   * =====================================================
+   */
+
   async function handleSubmit() {
     const text = message.trim();
 
-    if (!text || loading) return;
+    /*
+     * Empty message
+     */
+
+    if (!text) {
+      return;
+    }
+
+    /*
+     * Already sending
+     */
+
+    if (loading || submittingRef.current) {
+      return;
+    }
+
+    /*
+     * Lock immediately.
+     *
+     * This happens synchronously before sendMessage()
+     * can trigger another render/event.
+     */
+
+    submittingRef.current = true;
+
+    /*
+     * Clear input immediately.
+     */
 
     setMessage("");
 
-    await sendMessage(text);
+    try {
+      await sendMessage(text);
+    } catch (error) {
+      console.error("Message send failed:", error);
+
+      /*
+       * Restore the message if sending failed.
+       */
+
+      setMessage(text);
+    } finally {
+      /*
+       * Unlock after request completes.
+       */
+
+      submittingRef.current = false;
+    }
   }
 
-  function handleKeyDown(e) {
-    if (e.key !== "Enter") return;
+  /*
+   * =====================================================
+   * KEYBOARD
+   * =====================================================
+   */
 
-    if (e.shiftKey) return;
+  function handleKeyDown(e) {
+    /*
+     * Only Enter submits.
+     */
+
+    if (e.key !== "Enter") {
+      return;
+    }
+
+    /*
+     * Shift + Enter creates a new line.
+     */
+
+    if (e.shiftKey) {
+      return;
+    }
 
     e.preventDefault();
 
     handleSubmit();
   }
+
+  /*
+   * =====================================================
+   * RENDER
+   * =====================================================
+   */
+
+  const isSubmitting = loading || submittingRef.current;
 
   return (
     <div className="border-t border-slate-200 bg-white p-4">
@@ -63,7 +158,7 @@ export default function ChatInput() {
           ref={textareaRef}
           rows={1}
           value={message}
-          disabled={loading}
+          disabled={isSubmitting}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask about products, quotations, orders or comparisons..."
@@ -105,14 +200,23 @@ export default function ChatInput() {
             pb-3
           "
         >
-          <div className="flex items-center gap-2 text-xs text-slate-400">
+          <div
+            className="
+              flex
+              items-center
+              gap-2
+              text-xs
+              text-slate-400
+            "
+          >
             <Sparkles size={14} className="text-blue-500" />
 
             <span>Press Enter to send • Shift + Enter for new line</span>
           </div>
 
           <button
-            disabled={!message.trim() || loading}
+            type="button"
+            disabled={!message.trim() || isSubmitting}
             onClick={handleSubmit}
             className="
               flex
@@ -144,7 +248,7 @@ export default function ChatInput() {
               disabled:cursor-not-allowed
             "
           >
-            {loading ? (
+            {isSubmitting ? (
               <LoaderCircle size={18} className="animate-spin" />
             ) : (
               <SendHorizontal size={18} />

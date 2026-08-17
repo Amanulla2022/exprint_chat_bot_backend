@@ -1,11 +1,11 @@
 import ConversationRepository from "../../../repositories/ConversationRepository.js";
-import LeadRequestRepository from "../../../repositories/LeadRepository.js";
 import OrderRepository from "../../../repositories/OrderRequestRepository.js";
 import MemoryService from "../../../modules/memory/MemoryService.js";
 
 const conversationRepository = new ConversationRepository();
-const leadRequestRepository = new LeadRequestRepository();
+
 const orderRepository = new OrderRepository();
+
 const memoryService = new MemoryService();
 
 export default class LoadSessionNode {
@@ -25,16 +25,18 @@ export default class LoadSessionNode {
     );
 
     console.log("SESSION:", state.sessionId);
+
     console.log("FOUND:", !!conversation);
 
     if (conversation) {
-      // console.log("Messages:", conversation.messages.length);
       console.log("Workflow:", conversation.workflow);
-
-      // console.dir(conversation.memory, {
-      //   depth: null,
-      // });
     }
+
+    /*
+     * =====================================================
+     * Create Conversation
+     * =====================================================
+     */
 
     if (!conversation) {
       conversation = await conversationRepository.create({
@@ -63,19 +65,15 @@ export default class LoadSessionNode {
 
     /*
      * =====================================================
-     * Load Related Documents
+     * Load Active Order
      * =====================================================
      */
-
-    const leadRequest = await leadRequestRepository.findActiveByConversationId(
-      conversation._id,
-    );
 
     let order = await orderRepository.findActiveBySession(state.sessionId);
 
     /*
      * =====================================================
-     * Restore confirmed order during Lead workflow
+     * Restore Confirmed Order During Lead Workflow
      * =====================================================
      */
 
@@ -99,15 +97,51 @@ export default class LoadSessionNode {
 
     state.orderContext = order ?? null;
 
-    state.leadRequest = leadRequest ?? null;
+    /*
+     * =====================================================
+     * Lead
+     * =====================================================
+     *
+     * IMPORTANT:
+     *
+     * There is no LeadRequest lookup anymore.
+     *
+     * A newly created lead exists as:
+     *
+     * state.lead
+     *
+     * It is created by LeadEngine when the Lead
+     * workflow executes.
+     *
+     * Since Data does not contain sessionId/conversationId,
+     * we don't try to restore it here.
+     */
+
+    state.lead = state.lead ?? null;
+
+    /*
+     * =====================================================
+     * Customer
+     * =====================================================
+     */
 
     state.customer = {
       name: null,
-      mobile: null,
+
+      phone: null,
+
       email: null,
+
       company: null,
+
       ...(conversation.customer ?? {}),
     };
+
+    /*
+     * =====================================================
+     * History
+     * =====================================================
+     */
 
     state.history = Array.isArray(conversation.messages)
       ? [...conversation.messages.slice(-50)]
@@ -162,8 +196,12 @@ export default class LoadSessionNode {
     /*
      * =====================================================
      * Restore Active Workflow
+     *
      * Priority:
-     * SALES > RECOMMENDATION > LEAD
+     *
+     * SALES
+     * RECOMMENDATION
+     * LEAD
      * =====================================================
      */
 
@@ -193,17 +231,28 @@ export default class LoadSessionNode {
         "ASK_CUSTOMER_TYPE";
 
       state.awaitingDecision = true;
-    } else if (
-      conversation.workflow === "LEAD" &&
-      leadRequest &&
-      leadRequest.status !== "SUBMITTED"
-    ) {
+    } else if (conversation.workflow === "LEAD") {
+      /*
+       * =================================================
+       * Lead
+       * =================================================
+       *
+       * The new Lead workflow is one-shot:
+       *
+       * LeadEngine
+       *    ↓
+       * Data
+       *    ↓
+       * COMPLETED
+       *
+       * There is no LeadRequest status to restore.
+       */
+
       state.workflow = "LEAD";
 
-      state.currentStep =
-        conversation.currentStep ?? leadRequest.currentStep ?? "ASK_NAME";
+      state.currentStep = conversation.currentStep ?? "LEAD_COMPLETED";
 
-      state.awaitingDecision = true;
+      state.awaitingDecision = false;
     }
 
     /*
@@ -215,31 +264,41 @@ export default class LoadSessionNode {
     state.persistence = {
       conversation: {
         dirty: false,
+
         updatedAt: null,
       },
 
       customer: {
         dirty: false,
-        updatedAt: null,
-      },
 
-      leadRequest: {
-        dirty: false,
         updatedAt: null,
       },
 
       order: {
         dirty: false,
+
         updatedAt: null,
       },
     };
 
+    /*
+     * =====================================================
+     * Debug
+     * =====================================================
+     */
+
     console.log("RESTORED WORKFLOW", {
       workflow: state.workflow,
+
       currentStep: state.currentStep,
+
       awaitingDecision: state.awaitingDecision,
+
       hasRequirement: !!state.liveRequirement,
+
       hasProductSales: !!state.productSales,
+
+      hasLead: !!state.lead,
     });
 
     return state;

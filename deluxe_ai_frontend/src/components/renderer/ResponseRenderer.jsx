@@ -13,7 +13,7 @@ import ErrorRenderer from "./ErrorRenderer";
 
 import TextCard from "../cards/TextCard";
 
-export default function ResponseRenderer({ message }) {
+export default function ResponseRenderer({ message, onAction }) {
   if (!message) return null;
 
   /*
@@ -66,7 +66,12 @@ export default function ResponseRenderer({ message }) {
     case "sales":
       if (data.workflow === "LEAD") {
         return (
-          <LeadRenderer data={data} message={text} actions={rendererActions} />
+          <LeadRenderer
+            data={data}
+            message={text}
+            actions={rendererActions}
+            onAction={onAction}
+          />
         );
       }
 
@@ -92,7 +97,12 @@ export default function ResponseRenderer({ message }) {
 
     case "lead":
       return (
-        <LeadRenderer data={data} message={text} actions={rendererActions} />
+        <LeadRenderer
+          data={data}
+          message={text}
+          actions={rendererActions}
+          onAction={onAction}
+        />
       );
 
     case "faq":

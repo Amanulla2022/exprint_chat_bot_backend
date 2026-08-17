@@ -67,6 +67,8 @@ const DecisionTypes = Object.freeze({
 
   CANCEL_ORDER: "CANCEL_ORDER",
 
+  COLLECT_CUSTOMER: "COLLECT_CUSTOMER",
+
   /*
    * =====================================================
    * Completion

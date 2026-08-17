@@ -43,7 +43,9 @@
             ],
             "pricing": {
                 "currency": "AED",
-                "priceType": "quotation",
+                "priceType": "fixed",
+                "unit": "piece",
+                "priceQuantity": 1,
                 "quotationRequired": true
             },
             "selection": {

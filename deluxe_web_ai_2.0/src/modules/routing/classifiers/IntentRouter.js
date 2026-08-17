@@ -1,17 +1,19 @@
 import LLMService from "../../../ai/llm/LLMService.js";
 import RoutingPrompt from "../../../ai/llm/prompts/RoutingPrompt.js";
 
+import LeadIntentResolver from "../../lead/builders/LeadIntentResolver.js";
+
 import {
   SERVICE_PATTERNS,
   SUPPORT_PATTERNS,
   LEAD_PATTERNS,
-  // COMPARISON_PATTERNS,
   DETAIL_PATTERNS,
   SALES_PATTERNS,
   DISCOVERY_PATTERNS,
 } from "../utils/RoutingConstants.js";
 
 const llm = new LLMService();
+const leadIntentResolver = new LeadIntentResolver();
 
 export default class IntentRouter {
   async classify(state) {
@@ -29,7 +31,7 @@ export default class IntentRouter {
 
     /*
      * =====================================================
-     * Product Details
+     * PRODUCT DETAILS
      * =====================================================
      */
 
@@ -43,7 +45,7 @@ export default class IntentRouter {
 
     /*
      * =====================================================
-     * Sales
+     * SALES
      * =====================================================
      */
 
@@ -71,7 +73,7 @@ export default class IntentRouter {
 
     /*
      * =====================================================
-     * Support
+     * SUPPORT
      * =====================================================
      */
 
@@ -85,21 +87,7 @@ export default class IntentRouter {
 
     /*
      * =====================================================
-     * Comparison
-     * =====================================================
-     */
-
-    // if (COMPARISON_PATTERNS.some((pattern) => pattern.test(normalized))) {
-    //   return {
-    //     capability: "comparison",
-    //     confidence: 1,
-    //     source: "RULE",
-    //   };
-    // }
-
-    /*
-     * =====================================================
-     * Discovery
+     * DISCOVERY
      * =====================================================
      */
 
@@ -113,8 +101,38 @@ export default class IntentRouter {
 
     /*
      * =====================================================
-     * Lead
+     * LEAD
      * =====================================================
+     *
+     * LeadIntentResolver determines BOTH:
+     *
+     * 1. capability
+     * 2. requestType
+     *
+     * Example:
+     *
+     * "Request quotation"
+     *
+     * =>
+     *
+     * {
+     *   capability: "lead",
+     *   requestType: "QUOTATION"
+     * }
+     */
+
+    const leadIntent = leadIntentResolver.resolve(message);
+
+    if (leadIntent) {
+      return leadIntent;
+    }
+
+    /*
+     * =====================================================
+     * LEGACY LEAD PATTERN FALLBACK
+     * =====================================================
+     *
+     * This preserves your existing LEAD_PATTERNS behavior.
      */
 
     if (LEAD_PATTERNS.some((pattern) => pattern.test(normalized))) {
@@ -127,7 +145,7 @@ export default class IntentRouter {
 
     /*
      * =====================================================
-     * LLM Fallback
+     * LLM FALLBACK
      * =====================================================
      */
 

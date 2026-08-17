@@ -10,6 +10,11 @@ export default class SalesResponseBuilder {
     metadata = {},
     currentStep = null,
     nextStep = null,
+
+    // =====================================================
+    // Decision Context
+    // =====================================================
+    context = null,
   } = {}) {
     return {
       success: true,
@@ -35,6 +40,11 @@ export default class SalesResponseBuilder {
       currentStep,
 
       nextStep,
+
+      // IMPORTANT:
+      // Keeps COLLECT_CUSTOMER field information available
+      // to the frontend.
+      context,
     };
   }
 
@@ -63,6 +73,8 @@ export default class SalesResponseBuilder {
       currentStep: null,
 
       nextStep: null,
+
+      context: null,
     };
   }
 }

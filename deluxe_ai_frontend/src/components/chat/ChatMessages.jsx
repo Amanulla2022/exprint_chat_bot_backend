@@ -3,16 +3,13 @@
 import { AnimatePresence, motion } from "framer-motion";
 
 import { useChatContext } from "../../context/ChatContext";
-import useAutoScroll from "../../hooks/useAutoScroll";
 
 import ChatMessage from "./ChatMessage";
 import TypingIndicator from "./TypingIndicator";
 import WelcomeScreen from "./WelcomeScreen";
 
 export default function ChatMessages() {
-  const { messages, typing } = useChatContext();
-
-  const bottomRef = useAutoScroll([messages, typing]);
+  const { messages, typing, handleAction } = useChatContext();
 
   return (
     <div
@@ -44,8 +41,26 @@ export default function ChatMessages() {
           Messages Container
       =============================== */}
 
-      <div className="mx-auto flex w-full max-w-4xl flex-col px-5 py-6">
+      <div
+        className="
+          mx-auto
+          flex
+          w-full
+          max-w-4xl
+          flex-col
+          px-5
+          py-6
+        "
+      >
+        {/* ===============================
+            Welcome
+        =============================== */}
+
         {messages.length === 0 && <WelcomeScreen />}
+
+        {/* ===============================
+            Messages
+        =============================== */}
 
         <AnimatePresence initial={false}>
           {messages.map((message) => (
@@ -68,10 +83,14 @@ export default function ChatMessages() {
                 duration: 0.22,
               }}
             >
-              <ChatMessage message={message} />
+              <ChatMessage message={message} onAction={handleAction} />
             </motion.div>
           ))}
         </AnimatePresence>
+
+        {/* ===============================
+            Typing Indicator
+        =============================== */}
 
         {typing && (
           <motion.div
@@ -85,8 +104,6 @@ export default function ChatMessages() {
             <TypingIndicator />
           </motion.div>
         )}
-
-        <div ref={bottomRef} />
       </div>
     </div>
   );

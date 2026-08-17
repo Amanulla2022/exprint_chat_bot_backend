@@ -646,6 +646,19 @@ export default class SalesBrain {
 
     /*
      * =====================================================
+     * Customer
+     * =====================================================
+     */
+
+    if (extracted.customer) {
+      requirement.customer = {
+        ...(requirement.customer ?? {}),
+        ...(extracted.customer ?? {}),
+      };
+    }
+
+    /*
+     * =====================================================
      * Create First Item
      * =====================================================
      */
@@ -659,6 +672,8 @@ export default class SalesBrain {
     if (!currentItem) {
       return requirement;
     }
+
+    // EVERYTHING BELOW THIS REMAINS EXACTLY AS IT IS
 
     let updates = {};
 
@@ -935,6 +950,9 @@ export default class SalesBrain {
       case DecisionTypes.EDIT_ORDER:
         return true;
 
+      case DecisionTypes.COLLECT_CUSTOMER:
+        return true;
+
       case DecisionTypes.COMPLETE_ORDER:
         return true;
 
@@ -1016,17 +1034,24 @@ export default class SalesBrain {
 
     /*
      * =====================================================
-     * Persist Pricing
+     * Persist Calculated Items
      * =====================================================
      */
 
     requirement.items = pricing.items ?? requirement.items;
 
+    /*
+     * =====================================================
+     * Persist Order-Level Pricing
+     * =====================================================
+     */
+
     requirement = orderManager.updatePricing(requirement, {
-      subtotal: pricing.subtotal,
-      deliveryCharge: pricing.deliveryCharge,
-      total: pricing.total,
       currency: pricing.currency,
+      subtotal: pricing.subtotal,
+      delivery: pricing.deliveryCharge,
+      tax: 0,
+      total: pricing.total,
     });
 
     /*
@@ -1047,7 +1072,24 @@ export default class SalesBrain {
 
     /*
      * =====================================================
-     * Return Review Response
+     * Mark Review Completed
+     * =====================================================
+     *
+     * The customer has now been shown the complete
+     * order review.
+     *
+     * IMPORTANT:
+     * This does NOT confirm the order.
+     *
+     * It only allows the next decision cycle to move
+     * from REVIEW_ORDER → COMPLETE_ORDER.
+     */
+
+    requirement.reviewCompleted = true;
+
+    /*
+     * =====================================================
+     * Return Review
      * =====================================================
      */
 
@@ -1071,6 +1113,7 @@ export default class SalesBrain {
 
         sections: review.sections,
       },
+
       requirement,
     );
   }
@@ -1109,6 +1152,12 @@ export default class SalesBrain {
       actions: Array.isArray(response.actions) ? response.actions : [],
 
       sections: Array.isArray(response.sections) ? response.sections : [],
+
+      // =====================================================
+      // IMPORTANT
+      // Preserve conversation decision context
+      // =====================================================
+      context: response.context ?? null,
     });
   }
 
@@ -1155,6 +1204,8 @@ export default class SalesBrain {
 
       case DecisionTypes.ORDER_COMPLETED:
 
+      case DecisionTypes.COLLECT_CUSTOMER:
+
       default:
         return false;
     }
@@ -1175,6 +1226,11 @@ export default class SalesBrain {
       actions: Array.isArray(response.actions) ? response.actions : [],
 
       sections: Array.isArray(response.sections) ? response.sections : [],
+
+      // =====================================================
+      // Conversation Context
+      // =====================================================
+      context: response.context ?? null,
     };
   }
 
@@ -1286,32 +1342,74 @@ export default class SalesBrain {
       ? catalogService.getSimilarProducts(product)
       : [];
 
-    return this.buildResponse(response, requirement, {
+    /*
+     * =====================================================
+     * Preserve Decision Context
+     * =====================================================
+     *
+     * IMPORTANT:
+     * decision.context contains information such as:
+     *
+     * COLLECT_CUSTOMER
+     * {
+     *   action: "COLLECT_CUSTOMER",
+     *   field: {
+     *     id: "name",
+     *     label: "Name",
+     *     question: "What's your name?",
+     *     required: true
+     *   }
+     * }
+     *
+     * Do not lose this before sending the response
+     * to the frontend.
+     */
+
+    const responseWithContext = {
+      ...response,
+
+      context: decision.context ?? null,
+    };
+
+    return this.buildResponse(responseWithContext, requirement, {
       completed,
       workflow,
+
       metadata: {
         ...metadata,
 
+        // =====================================================
         // Conversation stage
+        // =====================================================
         stage: decision.type,
 
+        // =====================================================
         // Product data
+        // =====================================================
         product,
         recommendation,
         selection,
 
+        // =====================================================
         // Current workflow
+        // =====================================================
         field: decision.context?.field ?? null,
         requirement: decision.context?.requirement ?? null,
 
+        // =====================================================
         // Catalog
+        // =====================================================
         addons,
         options,
 
+        // =====================================================
         // Order
+        // =====================================================
         order: requirement,
 
+        // =====================================================
         // Suggestions
+        // =====================================================
         recommendations: {
           relatedProducts,
           frequentlyBoughtTogether,

@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 import ResponseRenderer from "../renderer/ResponseRenderer";
 
-export default function ChatMessage({ message }) {
+export default function ChatMessage({ message, onAction }) {
   const isUser = message.role === "user";
 
   return (
@@ -23,10 +23,6 @@ export default function ChatMessage({ message }) {
       }}
       className={`mb-6 flex w-full ${isUser ? "justify-end" : "justify-start"}`}
     >
-      {/* ======================================================
-          Assistant
-      ====================================================== */}
-
       {!isUser && (
         <>
           <div
@@ -54,14 +50,10 @@ export default function ChatMessage({ message }) {
               Deluxe AI
             </div>
 
-            <ResponseRenderer message={message} />
+            <ResponseRenderer message={message} onAction={onAction} />
           </div>
         </>
       )}
-
-      {/* ======================================================
-          User
-      ====================================================== */}
 
       {isUser && (
         <>

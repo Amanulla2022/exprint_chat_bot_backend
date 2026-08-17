@@ -221,31 +221,118 @@ export default class OrderManager {
 
     const index = order.currentItem ?? 0;
 
+    /*
+     * =====================================================
+     * NORMALIZE PRODUCT
+     * =====================================================
+     */
+
+    const incomingProduct = values.product ?? {};
+
+    const normalizedProduct = {
+      id:
+        incomingProduct.id ??
+        incomingProduct.productId ??
+        incomingProduct.slug ??
+        incomingProduct.name ??
+        null,
+
+      name:
+        incomingProduct.name ??
+        incomingProduct.productName ??
+        incomingProduct.title ??
+        incomingProduct.slug ??
+        null,
+
+      slug: incomingProduct.slug ?? null,
+    };
+
+    /*
+     * =====================================================
+     * CREATE ITEM IF MISSING
+     * =====================================================
+     *
+     * Do NOT require product.id specifically.
+     *
+     * A product can legitimately be identified by:
+     *
+     * - numeric id
+     * - string id
+     * - productId
+     * - slug
+     * - name
+     */
+
     if (!items[index]) {
-      if (!values.product?.id) {
+      if (!normalizedProduct.id && !normalizedProduct.name) {
         return order;
       }
 
-      items.push(builder.createItem(values.product));
+      items.push(builder.createItem(normalizedProduct));
 
       order = {
         ...order,
+
         items,
+
         currentItem: items.length - 1,
       };
     }
 
-    const current = items[order.currentItem];
+    /*
+     * =====================================================
+     * CURRENT ITEM
+     * =====================================================
+     */
 
-    items[order.currentItem] = {
+    const currentIndex = order.currentItem ?? 0;
+
+    const current = items[currentIndex];
+
+    /*
+     * =====================================================
+     * MERGE ITEM
+     * =====================================================
+     */
+
+    items[currentIndex] = {
       ...current,
 
       ...values,
 
+      /*
+       * Product
+       */
+
       product: {
         ...(current.product ?? {}),
+
         ...(values.product ?? {}),
+
+        id:
+          values.product?.id ??
+          values.product?.productId ??
+          current.product?.id ??
+          current.product?.productId ??
+          values.product?.slug ??
+          values.product?.name ??
+          current.product?.slug ??
+          current.product?.name ??
+          null,
+
+        name:
+          values.product?.name ??
+          values.product?.productName ??
+          values.product?.title ??
+          current.product?.name ??
+          null,
+
+        slug: values.product?.slug ?? current.product?.slug ?? null,
       },
+
+      /*
+       * Selection
+       */
 
       selection:
         values.selection !== undefined
@@ -255,10 +342,18 @@ export default class OrderManager {
             }
           : current.selection,
 
+      /*
+       * Product Data
+       */
+
       productData: {
         ...(current.productData ?? {}),
         ...(values.productData ?? {}),
       },
+
+      /*
+       * Workflow
+       */
 
       workflow: {
         ...(current.workflow ?? {}),
@@ -270,15 +365,27 @@ export default class OrderManager {
         },
       },
 
+      /*
+       * Requirements
+       */
+
       requirements:
         values.requirements !== undefined
           ? [...values.requirements]
           : [...(current.requirements ?? [])],
 
+      /*
+       * Pricing
+       */
+
       pricing: {
         ...(current.pricing ?? {}),
         ...(values.pricing ?? {}),
       },
+
+      /*
+       * Addons
+       */
 
       addons: {
         completed:
@@ -291,6 +398,10 @@ export default class OrderManager {
 
         notes: values.addons?.notes ?? current.addons?.notes ?? null,
       },
+
+      /*
+       * Notes
+       */
 
       notes:
         values.notes !== undefined
@@ -399,6 +510,80 @@ export default class OrderManager {
       },
     };
   }
+  /*
+   * =====================================================
+   * Pricing Totals
+   * =====================================================
+   */
+
+  calculatePricing(order = {}) {
+    const items = this.getItems(order);
+
+    /*
+     * =====================================================
+     * Subtotal
+     * =====================================================
+     *
+     * PricingService is responsible for calculating
+     * each item's pricing.
+     *
+     * OrderManager only aggregates those values.
+     */
+
+    const subtotal = items.reduce((total, item) => {
+      return total + Number(item?.pricing?.total ?? 0);
+    }, 0);
+
+    /*
+     * =====================================================
+     * Existing Delivery / Tax
+     * =====================================================
+     */
+
+    const delivery = Number(order?.pricing?.delivery ?? 0);
+
+    const tax = Number(order?.pricing?.tax ?? 0);
+
+    /*
+     * =====================================================
+     * Final Order Total
+     * =====================================================
+     */
+
+    const total = subtotal + delivery + tax;
+
+    return {
+      ...order,
+
+      pricing: {
+        ...(order.pricing ?? {}),
+
+        currency: order?.pricing?.currency ?? "AED",
+
+        subtotal,
+
+        delivery,
+
+        tax,
+
+        total,
+      },
+    };
+  }
+
+  /*
+   * =====================================================
+   * Order Totals
+   * =====================================================
+   */
+
+  calculateTotals(order = {}) {
+    order.totalItems = this.getTotalItems(order);
+
+    order.totalQuantity = this.getTotalQuantity(order);
+
+    return this.calculatePricing(order);
+  }
 
   /*
    * =====================================================
@@ -469,7 +654,7 @@ export default class OrderManager {
 
     order.totalQuantity = this.getTotalQuantity(order);
 
-    return order;
+    return this.calculatePricing(order);
   }
 
   /*
@@ -574,7 +759,13 @@ export default class OrderManager {
 
       pricing: structuredClone(item.pricing ?? {}),
 
-      addons: structuredClone(item.addons ?? []),
+      addons: structuredClone(
+        item.addons ?? {
+          completed: false,
+          items: [],
+          notes: null,
+        },
+      ),
 
       notes: structuredClone(item.notes ?? []),
 
@@ -815,7 +1006,13 @@ export default class OrderManager {
       return false;
     }
 
-    if (!item.product?.id) {
+    const productIdentity =
+      item.product?.id ??
+      item.product?.productId ??
+      item.product?.slug ??
+      item.product?.name;
+
+    if (!productIdentity) {
       return false;
     }
 

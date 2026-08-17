@@ -4,6 +4,8 @@ import { useCallback, useState } from "react";
 
 import chatService from "../services/ChatService";
 import sessionService from "../services/SessionService";
+import LeadRenderer from "../components/renderer/LeadRenderer";
+import CustomerRenderer from "../components/renderer/CustomerRenderer";
 
 export default function useChat() {
   const [sessionId, setSessionId] = useState(() =>
@@ -61,24 +63,117 @@ export default function useChat() {
   /* -------------------------------------------------- */
 
   const addAssistantMessage = (response) => {
-    const payload = response.context ?? response.data ?? {};
+    console.log("========== FRONTEND RESPONSE ==========");
+    console.dir(response, { depth: null });
+
+    const payload = response?.data ?? response?.context ?? response;
+
+    console.log("========== FRONTEND PAYLOAD ==========");
+    console.dir(payload, { depth: null });
 
     setMessages((prev) => [
       ...prev,
       createMessage({
         role: "assistant",
 
-        type: response.type,
+        type: response?.type ?? "text",
 
-        message: response.message,
+        message: response?.message ?? "",
 
         data: payload,
 
         metadata: payload,
 
-        actions: response.actions ?? [],
+        actions: response?.actions ?? [],
       }),
     ]);
+  };
+
+  const renderAssistantContent = (message) => {
+    const data = message.data ?? message.metadata ?? {};
+
+    /*
+     * =====================================================
+     * LEAD FORM
+     * =====================================================
+     *
+     * Backend:
+     *
+     * {
+     *   type: "lead",
+     *   data: {
+     *     status: "COLLECTING_CUSTOMER",
+     *     response: {
+     *       step: "COLLECT_CUSTOMER",
+     *       fields: [],
+     *       submitAction: {}
+     *     }
+     *   }
+     * }
+     */
+
+    if (
+      message.type === "lead" &&
+      (data.status === "COLLECTING_CUSTOMER" ||
+        data.response?.step === "COLLECT_CUSTOMER" ||
+        data.form?.step === "COLLECT_CUSTOMER")
+    ) {
+      return (
+        <LeadRenderer
+          data={data}
+          message={message.message}
+          onAction={handleAction}
+        />
+      );
+    }
+
+    /*
+     * =====================================================
+     * COMPLETED LEAD
+     * =====================================================
+     */
+
+    if (message.type === "lead" && (data.status === "COMPLETED" || data.lead)) {
+      return (
+        <LeadRenderer
+          data={data}
+          message={message.message}
+          onAction={handleAction}
+        />
+      );
+    }
+
+    /*
+     * =====================================================
+     * CUSTOMER COLLECTION
+     * =====================================================
+     *
+     * Keep this for any SALES-based customer collection
+     * that may still exist elsewhere.
+     */
+
+    if (
+      data.workflow === "SALES" &&
+      (data.currentStep === "COLLECT_CUSTOMER" ||
+        data.step === "COLLECT_CUSTOMER" ||
+        data.context?.field)
+    ) {
+      return (
+        <CustomerRenderer
+          data={data}
+          message={message.message}
+          onAction={handleAction}
+        />
+      );
+    }
+
+    /*
+     * =====================================================
+     * NORMAL MESSAGE
+     * =====================================================
+     */
+
+    return null;
   };
 
   /* -------------------------------------------------- */
@@ -129,12 +224,14 @@ export default function useChat() {
     // Recommendation
     "RECOMMENDATION_BUSINESS",
     "RECOMMENDATION_INDIVIDUAL",
+
     "BUSINESS_CAFE",
     "BUSINESS_RESTAURANT",
     "BUSINESS_HOTEL",
     "BUSINESS_RETAIL",
     "BUSINESS_HOSPITAL",
     "BUSINESS_OTHER",
+
     "GOAL_BRANDING",
     "GOAL_PROMOTION",
     "GOAL_PACKAGING",
@@ -144,8 +241,10 @@ export default function useChat() {
     "START_ORDER",
     "ORDER_PRODUCT",
     "SHOW_PRODUCT_DETAILS",
+
     "COMPARE_PRODUCT",
     "COMPARE_PRODUCTS",
+
     "GET_QUOTE",
     "CONTACT_SALES",
 
@@ -153,31 +252,64 @@ export default function useChat() {
     "SELECT_PRODUCT",
     "SHOW_SELECTIONS",
     "SELECT_SELECTION",
+
     "COLLECT_PRODUCT_FIELD",
     "COLLECT_REQUIREMENT",
+
     "SELECT_ADDONS",
     "SKIP_ADDONS",
+
     "COLLECT_QUANTITY",
+
     "EDIT_ORDER",
+
     "COLLECT_ARTWORK",
+
     "SELECT_DELIVERY_METHOD",
     "ASK_DELIVERY_ADDRESS",
     "ASK_DELIVERY_DATE",
+
     "REVIEW_ORDER",
     "CONFIRM_ORDER",
+
     "CANCEL_ORDER",
+
     "ORDER_COMPLETED",
+
+    // Lead
+    "COLLECT_CUSTOMER",
     "SUBMIT_LEAD",
   ]);
 
   const handleAction = useCallback(
     (action) => {
-      if (!action) return;
-
-      if (FORWARD_ACTIONS.has(action.id)) {
-        sendMessage("", action);
+      if (!action) {
         return;
       }
+
+      console.log("========== FRONTEND ACTION ==========");
+      console.log("Action:", action);
+
+      /*
+       * =====================================================
+       * Forward backend actions directly
+       * =====================================================
+       */
+
+      if (FORWARD_ACTIONS.has(action.id)) {
+        console.log("Forwarding action:", action.id);
+        console.log("Payload:", action.payload);
+
+        sendMessage("", action);
+
+        return;
+      }
+
+      /*
+       * =====================================================
+       * Custom actions
+       * =====================================================
+       */
 
       switch (action.id) {
         case "RECOMMEND_PRODUCTS":
@@ -190,10 +322,6 @@ export default function useChat() {
 
         case "CONTACT_SUPPORT":
           sendMessage("I need customer support");
-          break;
-
-        case "SUBMIT_LEAD":
-          sendMessage("", action);
           break;
 
         default:

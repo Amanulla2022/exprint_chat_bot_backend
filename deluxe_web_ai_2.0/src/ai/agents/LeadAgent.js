@@ -1,101 +1,286 @@
 import BaseAgent from "./BaseAgent.js";
-
 import ResponseBuilder from "../../core/responses/Apiresponse.js";
-import LeadService from "../../modules/lead/LeadService.js";
+import LeadEngine from "../../modules/lead/LeadEngine.js";
+import LeadConstants from "../../modules/lead/helpers/LeadConstants.js";
 
 const responseBuilder = new ResponseBuilder();
-const leadService = new LeadService();
+
+const leadEngine = new LeadEngine();
 
 export default class LeadAgent extends BaseAgent {
   async execute(state) {
     console.log("========== LEAD AGENT ==========");
 
-    console.log("ORDER EXISTS:", !!state.order);
-    console.log("ORDER TYPE:", typeof state.order);
+    /*
+     * =====================================================
+     * REQUEST TYPE
+     * =====================================================
+     *
+     * Preserve the routing intent before LeadEngine runs.
+     */
 
-    console.dir(state.order, { depth: null });
-    console.log("========== LEAD AGENT ==========");
+    const incomingRequestType =
+      state.action?.payload?.requestType ??
+      state.action?.requestType ??
+      state.leadContext?.requestType ??
+      state.requestType ??
+      state.routing?.requestType ??
+      null;
 
-    const result = await leadService.process(state);
+    if (incomingRequestType) {
+      state.requestType = incomingRequestType;
+
+      state.leadContext = {
+        ...(state.leadContext ?? {}),
+        requestType: incomingRequestType,
+      };
+    }
 
     /*
      * =====================================================
-     * Lead
+     * EXECUTE LEAD ENGINE
      * =====================================================
      */
 
-    state.leadRequest = result.leadRequest;
+    const result = await leadEngine.execute(state);
 
     /*
      * =====================================================
-     * Customer
+     * CUSTOMER FORM
      * =====================================================
      */
 
-    if (state.leadRequest?.customer) {
-      state.customer = {
-        ...(state.customer ?? {}),
-        ...state.leadRequest.customer,
+    if (!result.completed) {
+      state.workflow = "LEAD";
+
+      state.currentStep = "COLLECT_CUSTOMER";
+
+      state.awaitingDecision = true;
+
+      /*
+       * Preserve request type.
+       */
+
+      state.leadContext = {
+        ...(state.leadContext ?? {}),
+
+        requestType:
+          state.leadContext?.requestType ??
+          state.requestType ??
+          incomingRequestType ??
+          LeadConstants.REQUEST_TYPES.EXPERT,
       };
 
-      if (state.order) {
-        console.log("Updating Runtime Order Customer");
+      state.requestType = state.leadContext.requestType;
 
-        state.order.customer = {
-          ...(state.order.customer ?? {}),
-          ...state.leadRequest.customer,
+      state.response = responseBuilder.lead({
+        status: result.status,
+
+        response: result.form,
+
+        form: result.form,
+      });
+
+      return state;
+    }
+
+    /*
+     * =====================================================
+     * CREATED LEAD
+     * =====================================================
+     */
+
+    state.lead = result.lead;
+
+    /*
+     * =====================================================
+     * UPDATED ORDER
+     * =====================================================
+     */
+
+    if (result.order) {
+      state.order = result.order;
+
+      state.orderContext = result.order;
+
+      if (state.liveRequirement) {
+        state.liveRequirement = result.order;
+      }
+
+      if (state.productSales) {
+        state.productSales = {
+          ...state.productSales,
+
+          customer: result.order.customer ?? state.productSales.customer,
+
+          leadId: result.order.leadId ?? state.productSales.leadId,
         };
+      }
+    }
 
+    /*
+     * =====================================================
+     * CUSTOMER
+     * =====================================================
+     */
+
+    if (result.lead) {
+      state.customer = {
+        ...(state.customer ?? {}),
+
+        name: result.lead.name,
+
+        phone: result.lead.phoneNumber,
+
+        email: result.lead.emailId,
+
+        company: result.lead.companyName,
+      };
+    }
+
+    /*
+     * =====================================================
+     * WORKFLOW
+     * =====================================================
+     */
+
+    state.workflow = "LEAD";
+
+    state.currentStep = "LEAD_COMPLETED";
+
+    state.awaitingDecision = false;
+
+    /*
+     * =====================================================
+     * PERSISTENCE
+     * =====================================================
+     */
+
+    if (state.persistence) {
+      if (state.persistence.customer) {
+        state.persistence.customer.dirty = true;
+
+        state.persistence.customer.updatedAt = new Date();
+      }
+
+      if (state.persistence.conversation) {
+        state.persistence.conversation.dirty = true;
+
+        state.persistence.conversation.updatedAt = new Date();
+      }
+
+      if (state.persistence.order) {
         state.persistence.order.dirty = true;
+
         state.persistence.order.updatedAt = new Date();
       }
     }
 
     /*
      * =====================================================
-     * Workflow
+     * REQUEST TYPE
      * =====================================================
      */
 
-    state.workflow = "LEAD";
+    const requestType =
+      result.lead?.requestType ??
+      state.leadContext?.requestType ??
+      state.requestType ??
+      incomingRequestType ??
+      LeadConstants.REQUEST_TYPES.EXPERT;
 
-    state.currentStep = result.currentStep ?? result.response?.step ?? null;
+    /*
+     * Keep state synchronized.
+     */
 
-    state.awaitingDecision = result.awaitingDecision ?? false;
+    state.requestType = requestType;
+
+    state.leadContext = {
+      ...(state.leadContext ?? {}),
+      requestType,
+    };
 
     /*
      * =====================================================
-     * Completed
+     * SUCCESS MESSAGE
      * =====================================================
      */
 
-    if (result.status === "COMPLETED") {
-      state.currentStep = "LEAD_COMPLETED";
-      state.awaitingDecision = false;
+    let title = "Request Submitted Successfully";
+
+    let message = "Thank you! Our sales team will contact you shortly.";
+
+    /*
+     * -----------------------------------------------------
+     * ORDER
+     * -----------------------------------------------------
+     */
+
+    if (requestType === LeadConstants.REQUEST_TYPES.ORDER) {
+      title = "Order Request Submitted Successfully";
+
+      message =
+        "Thank you! Your order request has been received successfully. Our sales team will contact you shortly.";
+    } else if (requestType === LeadConstants.REQUEST_TYPES.QUOTATION) {
+
+    /*
+     * -----------------------------------------------------
+     * QUOTATION
+     * -----------------------------------------------------
+     */
+      title = "Quotation Request Submitted Successfully";
+
+      message =
+        "Thank you! Your quotation request has been received. Our sales team will review your requirements and contact you shortly.";
+    } else if (requestType === LeadConstants.REQUEST_TYPES.EXPERT) {
+
+    /*
+     * -----------------------------------------------------
+     * EXPERT
+     * -----------------------------------------------------
+     */
+      title = "Expert Request Submitted Successfully";
+
+      message =
+        "Thank you! Your request has been received. Our printing expert will contact you shortly.";
+    } else if (requestType === LeadConstants.REQUEST_TYPES.CONTACT_SALES) {
+
+    /*
+     * -----------------------------------------------------
+     * CONTACT SALES
+     * -----------------------------------------------------
+     */
+      title = "Sales Request Submitted Successfully";
+
+      message =
+        "Thank you! Your request has been received. Our sales team will contact you shortly.";
     }
 
     /*
      * =====================================================
-     * Persistence
+     * RESPONSE
      * =====================================================
      */
 
-    state.persistence.leadRequest.dirty = true;
-    state.persistence.leadRequest.updatedAt = new Date();
+    state.response = responseBuilder.lead({
+      status: "COMPLETED",
 
-    state.persistence.customer.dirty = true;
-    state.persistence.customer.updatedAt = new Date();
+      lead: result.lead,
 
-    state.persistence.conversation.dirty = true;
-    state.persistence.conversation.updatedAt = new Date();
+      ...(result.order
+        ? {
+            order: result.order,
+          }
+        : {}),
 
-    /*
-     * =====================================================
-     * Response
-     * =====================================================
-     */
+      response: {
+        step: "LEAD_COMPLETED",
 
-    state.response = responseBuilder.lead(result.response);
+        title,
+
+        message,
+      },
+    });
 
     return state;
   }

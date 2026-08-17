@@ -225,12 +225,26 @@ export default class RoutingEngine {
     }
 
     /*
+     * =====================================================
      * Lead
+     * =====================================================
      */
 
-    if (["REQUEST_QUOTE", "GET_QUOTE", "CONTACT_SALES"].includes(action.id)) {
+    if (["REQUEST_QUOTE", "GET_QUOTE"].includes(action.id)) {
       return {
         capability: "lead",
+        capabilities: ["lead"],
+        requestType: "QUOTATION",
+        confidence: 1,
+        source: "ACTION",
+      };
+    }
+
+    if (action.id === "CONTACT_SALES") {
+      return {
+        capability: "lead",
+        capabilities: ["lead"],
+        requestType: "CONTACT_SALES",
         confidence: 1,
         source: "ACTION",
       };

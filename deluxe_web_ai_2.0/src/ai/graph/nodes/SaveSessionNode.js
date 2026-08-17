@@ -1,14 +1,10 @@
 import ConversationRepository from "../../../repositories/ConversationRepository.js";
-import LeadRequestRepository from "../../../repositories/LeadRepository.js";
 import MemoryService from "../../../modules/memory/MemoryService.js";
 import OrderRepository from "../../../repositories/OrderRequestRepository.js";
-import TelegramService from "../../../modules/telegram/TelegramService.js";
 
 const conversationRepository = new ConversationRepository();
-const leadRequestRepository = new LeadRequestRepository();
-const orderRepository = new OrderRepository();
 
-const telegram = new TelegramService();
+const orderRepository = new OrderRepository();
 
 const memoryService = new MemoryService();
 
@@ -20,12 +16,27 @@ export default class SaveSessionNode {
      * =====================================================
      * Synchronize Customer
      * =====================================================
+     *
+     * New Lead module uses:
+     *
+     * state.lead
+     *
+     * NOT:
+     *
+     * state.leadRequest
      */
 
-    if (state.leadRequest?.customer) {
+    if (state.lead) {
       state.customer = {
         ...(state.customer ?? {}),
-        ...state.leadRequest.customer,
+
+        name: state.lead.name ?? state.customer?.name ?? null,
+
+        phone: state.lead.phoneNumber ?? state.customer?.phone ?? null,
+
+        email: state.lead.emailId ?? state.customer?.email ?? null,
+
+        company: state.lead.companyName ?? state.customer?.company ?? null,
       };
     }
 
@@ -65,137 +76,110 @@ export default class SaveSessionNode {
      * =====================================================
      */
 
-    if (true) {
-      const active =
-        state.order &&
-        !["CONFIRMED", "CANCELLED", "DELETED"].includes(state.order.status);
+    const active =
+      state.order &&
+      !["CONFIRMED", "CANCELLED", "DELETED"].includes(state.order.status);
 
-      const workflow = active ? "SALES" : (state.workflow ?? null);
-      /*
-       * Order workflow is now form-based.
-       * Only Recommendation / Lead persist conversational steps.
-       */
-      const currentStep = state.order?.active
-        ? null
-        : (state.currentStep ?? null);
+    const workflow = active ? "SALES" : (state.workflow ?? null);
 
-      const conversationUpdate = {
-        customer: state.customer,
+    /*
+     * Order workflow is form-based.
+     * Only Recommendation / Lead persist
+     * conversational steps.
+     */
 
-        workflow,
+    const currentStep = state.order?.active
+      ? null
+      : (state.currentStep ?? null);
 
-        currentStep,
+    const conversationUpdate = {
+      customer: state.customer,
 
-        metadata: {
-          ...(state.metadata ?? {}),
-          workflowStack: state.workflowStack ?? [],
-          lastRecommendationAt:
-            state.recommendationContext?.completedAt ?? null,
-        },
+      workflow,
 
-        memory: {
-          ...state.memory,
-          recommendation: state.recommendation,
-          recommendationContext: state.recommendationContext,
-        },
+      currentStep,
 
-        messages: state.history,
+      metadata: {
+        ...(state.metadata ?? {}),
 
-        updatedAt: new Date(),
-      };
+        workflowStack: state.workflowStack ?? [],
 
-      console.log({
-        workflow,
-        currentStep,
-      });
+        lastRecommendationAt: state.recommendationContext?.completedAt ?? null,
+      },
 
-      state.conversation = await conversationRepository.update(
-        {
-          sessionId: state.sessionId,
-        },
-        {
-          $set: conversationUpdate,
-        },
-        {
-          upsert: true,
-        },
-      );
+      memory: {
+        ...state.memory,
 
-      const db = await conversationRepository.findBySessionId(state.sessionId);
+        recommendation: state.recommendation,
 
-      /*
-       * =====================================================
-       * Synchronize Memory Snapshot
-       * =====================================================
-       */
+        recommendationContext: state.recommendationContext,
+      },
 
-      state.memory = memoryService.build(state.conversation);
+      messages: state.history,
 
-      state.persistence.conversation.dirty = false;
-    }
+      updatedAt: new Date(),
+    };
+
+    console.log({
+      workflow,
+      currentStep,
+    });
+
+    state.conversation = await conversationRepository.update(
+      {
+        sessionId: state.sessionId,
+      },
+
+      {
+        $set: conversationUpdate,
+      },
+
+      {
+        upsert: true,
+      },
+    );
 
     /*
      * =====================================================
-     * Persist Lead Request
+     * Reload Conversation Snapshot
      * =====================================================
      */
 
-    if (state.persistence?.leadRequest?.dirty && state.leadRequest) {
-      if (state.leadRequest._id) {
-        state.leadRequest = await leadRequestRepository.update(
-          {
-            _id: state.leadRequest._id,
-          },
-          state.leadRequest,
-        );
-      } else {
-        state.leadRequest = await leadRequestRepository.create({
-          ...state.leadRequest,
-          sessionId: state.sessionId,
-          conversationId: state.conversationId,
-        });
-      }
+    await conversationRepository.findBySessionId(state.sessionId);
 
-      // Copy customer into state
-      if (state.leadRequest.customer) {
-        state.customer = {
-          ...(state.customer ?? {}),
-          ...state.leadRequest.customer,
-        };
+    /*
+     * =====================================================
+     * Synchronize Memory Snapshot
+     * =====================================================
+     */
 
-        if (state.order) {
-          state.order.customer = {
-            ...(state.order.customer ?? {}),
-            ...state.leadRequest.customer,
-          };
+    state.memory = memoryService.build(state.conversation);
 
-          state.persistence.order.dirty = true;
-        }
-      }
-
-      // Send Lead notification ONLY for non-order leads
-      if (
-        state.currentStep === "LEAD_COMPLETED" &&
-        state.leadRequest.status === "SUBMITTED" &&
-        state.leadRequest.type !== "ORDER_REQUEST"
-      ) {
-        await telegram.sendLead(state.leadRequest);
-      }
-
-      state.persistence.leadRequest.dirty = false;
-    }
+    state.persistence.conversation.dirty = false;
 
     /*
      * =====================================================
      * Link Order -> Lead
      * =====================================================
+     *
+     * New Lead document is already saved by:
+     *
+     * LeadEngine
+     *    ↓
+     * LeadService
+     *    ↓
+     * Data
+     *
+     * Therefore SaveSessionNode does NOT create/update
+     * the lead.
+     *
+     * It only uses the generated Lead _id if an order
+     * needs to reference it.
      */
 
     const pendingLeadId =
-      state.order &&
-      state.leadRequest?._id &&
-      state.order.leadId !== state.leadRequest._id
-        ? state.leadRequest._id
+      state.order && state.lead?._id && state.order.leadId !== state.lead._id
+        ? state.lead._id
         : null;
 
     /*
@@ -213,22 +197,23 @@ export default class SaveSessionNode {
         state.order,
       );
 
+      /*
+       * ---------------------------------------------------
+       * Link Order -> Lead
+       * ---------------------------------------------------
+       */
+
       if (pendingLeadId) {
-        state.order = await orderRepository.update(state.order._id, {
-          leadId: pendingLeadId,
-        });
+        state.order = await orderRepository.update(
+          state.order._id,
+
+          {
+            leadId: pendingLeadId,
+          },
+        );
       }
 
       state.orderContext = state.order;
-
-      // Send Order notification ONLY after customer has been collected
-      if (
-        state.currentStep === "LEAD_COMPLETED" &&
-        state.leadRequest?.status === "SUBMITTED" &&
-        state.leadRequest?.type === "ORDER_REQUEST"
-      ) {
-        await telegram.sendOrder(state.order);
-      }
 
       state.persistence.order.dirty = false;
     }

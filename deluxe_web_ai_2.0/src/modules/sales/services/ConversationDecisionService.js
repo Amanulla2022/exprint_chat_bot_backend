@@ -278,6 +278,22 @@ export default class ConversationDecisionService {
 
     /*
      * =====================================================
+     * CONFIRMED
+     * =====================================================
+     *
+     * IMPORTANT:
+     * Once the customer has clicked Confirm Order,
+     * NEVER return REVIEW_ORDER again.
+     *
+     * The next stage is customer information collection.
+     */
+
+    if (requirement.confirmed === true) {
+      return this.buildCompletedDecision(requirement);
+    }
+
+    /*
+     * =====================================================
      * Product Workflow
      * =====================================================
      */
@@ -329,6 +345,7 @@ export default class ConversationDecisionService {
           return this.buildEditDecision(requirement);
       }
     }
+
     /*
      * =====================================================
      * Quantity
@@ -384,11 +401,23 @@ export default class ConversationDecisionService {
       return this.buildDeliveryDateDecision();
     }
 
+    /*
+     * =====================================================
+     * Review
+     * =====================================================
+     */
+
     if (!requirement.confirmed) {
       return this.buildReviewDecision(requirement);
     }
 
-    return this.buildCompletedDecision();
+    /*
+     * =====================================================
+     * Completed
+     * =====================================================
+     */
+
+    return this.buildCompletedDecision(requirement);
   }
 
   /*
@@ -812,14 +841,21 @@ export default class ConversationDecisionService {
    * =====================================================
    */
 
-  buildCompletedDecision() {
-    return this.createDecision({
+  buildCompletedDecision(requirement = {}) {
+    return {
       type: DecisionTypes.ORDER_COMPLETED,
+
+      stage: "SALES",
 
       context: {
         action: DecisionTypes.ORDER_COMPLETED,
+        order: requirement,
       },
-    });
+
+      actions: [],
+
+      sections: [],
+    };
   }
 
   buildProductContext(product = {}, item = {}) {
@@ -837,5 +873,62 @@ export default class ConversationDecisionService {
 
       selection,
     };
+  }
+
+  hasCustomerInformation(requirement = {}) {
+    const customer = requirement.customer ?? {};
+
+    return Boolean(customer.name && customer.phone && customer.email);
+  }
+
+  buildCustomerDecision(requirement = {}) {
+    const customer = requirement.customer ?? {};
+
+    if (!customer.name) {
+      return this.createDecision({
+        type: DecisionTypes.COLLECT_CUSTOMER,
+        context: {
+          action: DecisionTypes.COLLECT_CUSTOMER,
+          field: {
+            id: "name",
+            label: "Name",
+            question: "What's your name?",
+            required: true,
+          },
+        },
+      });
+    }
+
+    if (!customer.phone) {
+      return this.createDecision({
+        type: DecisionTypes.COLLECT_CUSTOMER,
+        context: {
+          action: DecisionTypes.COLLECT_CUSTOMER,
+          field: {
+            id: "phone",
+            label: "Phone Number",
+            question: "What's the best phone number to reach you on?",
+            required: true,
+          },
+        },
+      });
+    }
+
+    if (!customer.email) {
+      return this.createDecision({
+        type: DecisionTypes.COLLECT_CUSTOMER,
+        context: {
+          action: DecisionTypes.COLLECT_CUSTOMER,
+          field: {
+            id: "email",
+            label: "Email",
+            question: "What's your email address?",
+            required: true,
+          },
+        },
+      });
+    }
+
+    return null;
   }
 }

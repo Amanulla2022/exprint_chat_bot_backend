@@ -65,16 +65,16 @@ export default class SemanticProductRouter {
      * =====================================================
      */
 
-    if (
-      catalogContext.products.length > 1 &&
-      COMPARISON_PATTERNS.some((pattern) => pattern.test(normalized))
-    ) {
-      return {
-        capability: "comparison",
-        confidence: 1,
-        source: "RULE",
-      };
-    }
+    // if (
+    //   catalogContext.products.length > 1 &&
+    //   COMPARISON_PATTERNS.some((pattern) => pattern.test(normalized))
+    // ) {
+    //   return {
+    //     capability: "comparison",
+    //     confidence: 1,
+    //     source: "RULE",
+    //   };
+    // }
 
     /*
      * =====================================================

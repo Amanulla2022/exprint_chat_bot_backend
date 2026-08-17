@@ -43,6 +43,8 @@
       "pricing": {
         "currency": "AED",
         "priceType": "starting-from",
+        "unit": "100-pieces",
+        "quantityStep": 100,
         "quotationRequired": true
       },
       "selection": {

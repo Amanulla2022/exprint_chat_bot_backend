@@ -24,6 +24,8 @@ export default class SalesValidator {
       currentStep: response.currentStep ?? null,
 
       nextStep: response.nextStep ?? null,
+
+      context: response.context ?? null,
     });
   }
 }

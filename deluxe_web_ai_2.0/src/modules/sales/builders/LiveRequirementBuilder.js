@@ -28,8 +28,6 @@ export default class LiveRequirementBuilder {
         requiredDate: null,
       },
 
-      //edit order
-
       editing: {
         active: false,
         step: null,
@@ -37,13 +35,9 @@ export default class LiveRequirementBuilder {
 
       pricing: {
         currency: "AED",
-
         subtotal: 0,
-
         delivery: 0,
-
         tax: 0,
-
         total: 0,
       },
 
@@ -64,11 +58,64 @@ export default class LiveRequirementBuilder {
    */
 
   createItem(product = {}) {
+    /*
+     * -----------------------------------------------------
+     * Product Identity
+     * -----------------------------------------------------
+     *
+     * ID can be:
+     *
+     * number
+     * string
+     *
+     * Never force it to a specific type.
+     */
+
+    const productId =
+      product.id ??
+      product.productId ??
+      product.slug ??
+      product.name ??
+      product.title ??
+      null;
+
+    /*
+     * -----------------------------------------------------
+     * Product Name
+     * -----------------------------------------------------
+     *
+     * IMPORTANT:
+     *
+     * Never create:
+     *
+     * name: null
+     *
+     * when another valid product name exists.
+     */
+
+    const productName =
+      product.name ??
+      product.productName ??
+      product.title ??
+      product.label ??
+      product.slug ??
+      null;
+
+    /*
+     * -----------------------------------------------------
+     * Product Slug
+     * -----------------------------------------------------
+     */
+
+    const productSlug = product.slug ?? product.id ?? product.productId ?? null;
+
     return {
       product: {
-        id: product.id ?? null,
-        name: product.name ?? null,
-        slug: product.slug ?? null,
+        id: productId,
+
+        name: productName,
+
+        slug: productSlug,
       },
 
       selection: null,
@@ -88,15 +135,21 @@ export default class LiveRequirementBuilder {
 
       pricing: {
         currency: "AED",
+
         unitPrice: null,
+
         subtotal: 0,
+
         discount: 0,
+
         total: 0,
       },
 
       addons: {
         completed: false,
+
         items: [],
+
         notes: null,
       },
 
@@ -113,7 +166,7 @@ export default class LiveRequirementBuilder {
    */
 
   merge(order = {}, values = {}) {
-    return {
+    const merged = {
       ...order,
 
       ...values,
@@ -138,6 +191,126 @@ export default class LiveRequirementBuilder {
           ? [...values.notes]
           : [...(order.notes ?? [])],
     };
+
+    /*
+     * ===================================================
+     * IMPORTANT: PRESERVE ORDER ITEMS
+     * ===================================================
+     *
+     * A partial update must NEVER replace the complete
+     * product object with:
+     *
+     * {
+     *   id: "...",
+     *   name: null,
+     *   slug: null
+     * }
+     *
+     * Merge every item independently.
+     */
+
+    if (Array.isArray(values.items)) {
+      merged.items = values.items.map((newItem, index) => {
+        const oldItem = order.items?.[index] ?? {};
+
+        return {
+          ...oldItem,
+
+          ...newItem,
+
+          /*
+           * Product must be merged, not replaced.
+           */
+
+          product: {
+            ...(oldItem.product ?? {}),
+            ...(newItem.product ?? {}),
+
+            id: newItem.product?.id ?? oldItem.product?.id ?? null,
+
+            name:
+              newItem.product?.name ??
+              newItem.product?.productName ??
+              newItem.product?.title ??
+              oldItem.product?.name ??
+              oldItem.product?.productName ??
+              oldItem.product?.title ??
+              oldItem.product?.slug ??
+              null,
+
+            slug:
+              newItem.product?.slug ??
+              oldItem.product?.slug ??
+              newItem.product?.id ??
+              oldItem.product?.id ??
+              null,
+          },
+
+          /*
+           * Selection
+           */
+
+          selection: {
+            ...(oldItem.selection ?? {}),
+            ...(newItem.selection ?? {}),
+          },
+
+          /*
+           * Product data
+           */
+
+          productData: {
+            ...(oldItem.productData ?? {}),
+            ...(newItem.productData ?? {}),
+          },
+
+          /*
+           * Workflow
+           */
+
+          workflow: {
+            ...(oldItem.workflow ?? {}),
+            ...(newItem.workflow ?? {}),
+
+            artwork: {
+              ...(oldItem.workflow?.artwork ?? {}),
+              ...(newItem.workflow?.artwork ?? {}),
+            },
+          },
+
+          /*
+           * Pricing
+           */
+
+          pricing: {
+            ...(oldItem.pricing ?? {}),
+            ...(newItem.pricing ?? {}),
+          },
+
+          /*
+           * Addons
+           */
+
+          addons: {
+            ...(oldItem.addons ?? {}),
+            ...(newItem.addons ?? {}),
+
+            items: newItem.addons?.items ?? oldItem.addons?.items ?? [],
+          },
+
+          /*
+           * Notes
+           */
+
+          notes:
+            newItem.notes !== undefined
+              ? [...newItem.notes]
+              : [...(oldItem.notes ?? [])],
+        };
+      });
+    }
+
+    return merged;
   }
 
   /*

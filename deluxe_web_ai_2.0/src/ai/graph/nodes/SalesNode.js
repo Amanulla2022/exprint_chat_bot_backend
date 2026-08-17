@@ -1,47 +1,45 @@
+// ai/graph/nodes/SalesNode.js
+
 import SalesService from "../../../modules/sales/SalesService.js";
 import ResponseBuilder from "../../../core/responses/Apiresponse.js";
 import OrderManager from "../../../modules/sales/services/OrderManager.js";
-import LeadManager from "../../../modules/lead/LeadManager.js";
 import LeadAgent from "../../agents/LeadAgent.js";
 
 const salesService = new SalesService();
+
 const responseBuilder = new ResponseBuilder();
+
 const orderManager = new OrderManager();
-const leadManager = new LeadManager();
+
 const leadAgent = new LeadAgent();
 
 export default class SalesNode {
   async execute(state = {}) {
     console.log("========== SALES NODE ==========");
-    console.log("SalesNode reached");
 
     const result = await salesService.execute(state);
-
-    // console.log("===== SALES SERVICE RESULT =====");
-    // console.dir(result, { depth: null });
-
-    // console.log("liveRequirement =", result.liveRequirement);
 
     /*
      * =====================================================
      * Build / Update Runtime Order
      * =====================================================
      */
-    // console.log("===== RESULT LIVE REQUIREMENT =====");
-    // console.dir(result.liveRequirement, { depth: null });
 
     let order = orderManager.buildOrder(result.liveRequirement, state.order);
 
-    // Customer finished the order
+    /*
+     * =====================================================
+     * Customer Completed Entire Order
+     * =====================================================
+     */
+
     if (result.completed) {
       order = orderManager.confirmOrder(order);
     }
 
-    // console.log("===== BUILT ORDER =====");
-    // console.dir(order, { depth: null });
     /*
      * =====================================================
-     * Build Response
+     * Response
      * =====================================================
      */
 
@@ -51,7 +49,7 @@ export default class SalesNode {
 
     /*
      * =====================================================
-     * Build Next State
+     * Next State
      * =====================================================
      */
 
@@ -79,21 +77,23 @@ export default class SalesNode {
 
     /*
      * =====================================================
-     * Persistence Flags
+     * Persistence
      * =====================================================
      */
 
     if (nextState.persistence) {
       nextState.persistence.conversation.dirty = true;
+
       nextState.persistence.conversation.updatedAt = new Date();
 
       nextState.persistence.order.dirty = true;
+
       nextState.persistence.order.updatedAt = new Date();
     }
 
     /*
      * =====================================================
-     * Sales -> Lead Handoff
+     * SALES → LEAD
      * =====================================================
      */
 
@@ -101,26 +101,26 @@ export default class SalesNode {
       console.log("========== SALES -> LEAD ==========");
 
       nextState.workflow = "LEAD";
-      nextState.currentStep = null;
-      nextState.awaitingDecision = false;
-
-      nextState.leadRequest = leadManager.createLead({
-        customer: result.liveRequirement?.customer,
-        order: result.liveRequirement,
-      });
-
-      nextState.leadRequest.type = result.metadata?.leadType ?? "ORDER_REQUEST";
 
       /*
-       * =====================================================
-       * Start Lead Workflow Immediately
-       * =====================================================
+       * IMPORTANT:
+       *
+       * The lead is NOT completed yet.
+       *
+       * We are asking the frontend
+       * to display the customer form.
+       */
+
+      nextState.currentStep = "COLLECT_CUSTOMER";
+
+      nextState.awaitingDecision = true;
+
+      /*
+       * LeadAgent returns the form.
        */
 
       return await leadAgent.execute(nextState);
     }
-
-    console.log("SALES NODE currentStep:", nextState.currentStep);
 
     return nextState;
   }
